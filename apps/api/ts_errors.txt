@@ -1,0 +1,107 @@
+src/controllers/orderController.ts(30,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/orderController.ts(44,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/orderController.ts(81,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/orderController.ts(104,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(15,62): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(42,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(58,62): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(71,54): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(85,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/restaurantController.ts(102,44): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/reviewController.ts(21,61): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/reviewController.ts(31,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/models/MenuItem.ts(8,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, MenuItemDocument, Document<unknown, {}, FlatRecord<MenuItemDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Order.ts(9,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, OrderDocument, Document<unknown, {}, FlatRecord<OrderDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Order.ts(10,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, OrderDocument, Document<unknown, {}, FlatRecord<OrderDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Reservation.ts(8,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReservationDocument, Document<unknown, {}, FlatRecord<ReservationDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Reservation.ts(9,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReservationDocument, Document<unknown, {}, FlatRecord<ReservationDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Reservation.ts(11,5): error TS2322: Type '{ type: DateConstructor; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReservationDocument, Document<unknown, {}, FlatRecord<ReservationDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'DateConstructor' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'DateConstructor' is missing the following properties from type 'StringConstructor': fromCharCode, fromCodePoint, raw
+src/models/Restaurant.ts(8,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, RestaurantDocument, Document<unknown, {}, FlatRecord<RestaurantDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Review.ts(8,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; unique: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReviewDocument, Document<unknown, {}, FlatRecord<ReviewDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Review.ts(9,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReviewDocument, Document<unknown, {}, FlatRecord<ReviewDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/Review.ts(10,5): error TS2322: Type '{ type: typeof Schema.Types.ObjectId; ref: string; required: true; }' is not assignable to type 'SchemaDefinitionProperty<string, ReviewDocument, Document<unknown, {}, FlatRecord<ReviewDocument>, {}, DefaultSchemaOptions> & FlatRecord<...> & Required<...> & { ...; }> | undefined'.
+  Types of property 'type' are incompatible.
+    Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringSchemaDefinition | undefined'.
+      Type 'typeof ObjectId' is not assignable to type 'typeof Mixed | StringConstructor | typeof String | String'.
+        Type 'typeof ObjectId' is not assignable to type 'typeof Mixed'.
+          Types of property 'schemaName' are incompatible.
+            Type '"ObjectId"' is not assignable to type '"Mixed"'.
+src/models/User.ts(51,16): error TS2790: The operand of a 'delete' operator must be optional.
+src/models/User.ts(53,16): error TS2790: The operand of a 'delete' operator must be optional.
+src/services/authService.ts(13,14): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: null, options?: (SignOptions & { algorithm: "none"; }) | undefined): string', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'null'.
+  Overload 2 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, options?: SignOptions | undefined): string', gave the following error.
+    Type 'string' is not assignable to type 'number | StringValue | undefined'.
+  Overload 3 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, callback: SignCallback): void', gave the following error.
+    Object literal may only specify known properties, and 'expiresIn' does not exist in type 'SignCallback'.
+src/services/authService.ts(24,14): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: null, options?: (SignOptions & { algorithm: "none"; }) | undefined): string', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'null'.
+  Overload 2 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, options?: SignOptions | undefined): string', gave the following error.
+    Type 'string' is not assignable to type 'number | StringValue | undefined'.
+  Overload 3 of 5, '(payload: string | object | Buffer<ArrayBufferLike>, secretOrPrivateKey: Buffer<ArrayBufferLike> | Secret | JsonWebKeyInput | PrivateKeyInput, callback: SignCallback): void', gave the following error.
+    Object literal may only specify known properties, and 'expiresIn' does not exist in type 'SignCallback'.
