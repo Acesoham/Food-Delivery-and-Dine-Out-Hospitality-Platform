@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🍕 FoodHub — Integrated Food Delivery & Dine-Out Hospitality Platform
 
 > A production-grade MERN stack (TypeScript) platform that unifies food delivery, table reservations, and event discovery into a single ecosystem.
@@ -73,3 +74,6 @@ MongoDB Atlas • Express.js • React 19 • Node.js • TypeScript • Socket.
 ## 📄 License
 
 MIT
+=======
+# Food-Delivery-and-Dine-Out-Hospitality-Platform
+>>>>>>> 19c4473ebfb72457dc8d655610df4bb8450a88bd

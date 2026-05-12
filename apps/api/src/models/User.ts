@@ -36,7 +36,7 @@ const userSchema = new Schema<UserDocument>(
       state: String,
       zipCode: String,
       location: {
-        type: { type: String, enum: ['Point'], default: 'Point' },
+        type: { type: String, enum: ['Point'] },
         coordinates: { type: [Number] }, // [lng, lat]
       },
     },
