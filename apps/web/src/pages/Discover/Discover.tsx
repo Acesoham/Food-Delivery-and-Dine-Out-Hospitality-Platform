@@ -5,14 +5,17 @@ import { restaurantApi } from '../../services/endpoints';
 import type { IRestaurant } from 'shared-types';
 import './Discover.css';
 
-const CUISINE_FILTERS = ['All', 'Indian', 'Italian', 'Chinese', 'Japanese', 'American', 'Thai', 'Mexican'];
+const CUISINE_FILTERS = [
+  'All', 'Indian', 'Chinese', 'Maharashtrian', 'Street Food',
+  'Cafe', 'Pure Veg', 'Italian', 'Continental', 'Fine Dining',
+];
 
 export const Discover = () => {
   const [restaurants, setRestaurants] = useState<(IRestaurant & { distanceInKm?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
-  const [userLocation, setUserLocation] = useState({ lat: 12.9716, lng: 77.5946 }); // Default: Bangalore
+  const [userLocation, setUserLocation] = useState({ lat: 19.9975, lng: 73.7898 }); // Default: Nashik
 
   useEffect(() => {
     // Try getting user's location
@@ -34,7 +37,7 @@ export const Discover = () => {
       const params: any = {
         lat: userLocation.lat,
         lng: userLocation.lng,
-        radius: 15000,
+        radius: 50000, // 50 km radius to cover all Nashik area
         limit: 20,
       };
       if (selectedCuisine !== 'All') params.cuisine = selectedCuisine;

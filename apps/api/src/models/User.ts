@@ -56,6 +56,7 @@ const userSchema = new Schema<UserDocument>(
   }
 );
 
+
 // Indexes
 
 userSchema.index({ 'address.location': '2dsphere' }, { sparse: true });

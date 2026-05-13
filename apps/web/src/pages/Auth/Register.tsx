@@ -34,8 +34,16 @@ export const Register = () => {
           phone: form.phone,
         },
       });
-      toast.success('Account created! Welcome!');
-      navigate('/discover');
+      if (form.role === 'merchant') {
+        toast.success('Restaurant account created! Set up your restaurant now.');
+        navigate('/dashboard');
+      } else if (form.role === 'courier') {
+        toast.success('Courier account created! Head to your dashboard.');
+        navigate('/dashboard');
+      } else {
+        toast.success('Account created! Welcome!');
+        navigate('/discover');
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Registration failed');
     } finally {
