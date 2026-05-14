@@ -37,7 +37,7 @@ const orderSchema = new Schema<OrderDocument>(
       },
       method: {
         type: String,
-        enum: ['card', 'mock'],
+        enum: ['card', 'mock', 'cod'],
         default: 'card',
       },
     },

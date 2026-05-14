@@ -81,20 +81,7 @@ export const Login = () => {
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>Demo Accounts</span>
-        </div>
-        <div className="demo-accounts">
-          <button className="btn btn-outline btn-sm" onClick={() => { setEmail('consumer@demo.com'); setPassword('password123'); }}>
-            Consumer
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => { setEmail('merchant@demo.com'); setPassword('password123'); }}>
-            Merchant
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => { setEmail('courier@demo.com'); setPassword('password123'); }}>
-            Courier
-          </button>
-        </div>
+        
 
         <p className="auth-footer">
           Don't have an account? <Link to="/register">Sign up</Link>

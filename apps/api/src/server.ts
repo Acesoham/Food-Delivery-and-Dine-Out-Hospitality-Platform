@@ -14,6 +14,7 @@ import authRoutes from './routes/auth';
 import restaurantRoutes from './routes/restaurants';
 import orderRoutes from './routes/orders';
 import reviewRoutes from './routes/reviews';
+import reservationRoutes from './routes/reservations';
 
 const app: express.Application = express();
 const httpServer = createServer(app);
@@ -48,6 +49,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/restaurants', restaurantRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/reservations', reservationRoutes);
 
 // ─── Error Handling ───
 app.use(notFoundHandler);

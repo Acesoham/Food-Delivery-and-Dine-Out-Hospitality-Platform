@@ -3,7 +3,9 @@ import { Navigate } from 'react-router-dom';
 import {
   Store, Package, Settings, UtensilsCrossed, Loader2,
   Plus, Edit2, Trash2, X, ChevronRight, Bike, ToggleLeft, ToggleRight,
+  Calendar, Users, Clock, CheckCircle, XCircle,
 } from 'lucide-react';
+import api from '../../services/api';
 import { restaurantApi, orderApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import type { IRestaurant, IMenuItem, IOrder } from 'shared-types';
@@ -40,10 +42,11 @@ const EMPTY_REST: RestaurantForm = {
 /* ─── Component ─────────────────────────────────────────────── */
 export const Dashboard = () => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'reservations' | 'menu' | 'settings'>('orders');
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [menuItems, setMenuItems] = useState<IMenuItem[]>([]);
   const [orders, setOrders] = useState<IOrder[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Create/Edit restaurant
@@ -72,18 +75,33 @@ export const Dashboard = () => {
       if (myRests.data.length > 0) {
         const rest = myRests.data[0];
         setRestaurant(rest);
-        const [menuRes, ordersRes] = await Promise.all([
+        const [menuRes, ordersRes, resRes] = await Promise.all([
           restaurantApi.getMenu(rest._id),
           orderApi.getRestaurantOrders(rest._id),
+          api.get<{ success: boolean; data: any[] }>(`/reservations/restaurant/${rest._id}`).catch(() => ({ data: { data: [] } })),
         ]);
         setMenuItems(menuRes.data.data);
         setOrders(ordersRes.data.data);
+        setReservations((resRes as any).data.data || []);
       }
     } catch (err) {
       console.error(err);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* ── Update Reservation Status ── */
+  const updateReservationStatus = async (resId: string, status: string) => {
+    try {
+      await api.patch(`/reservations/${resId}/status`, { status });
+      setReservations((prev) =>
+        prev.map((r) => (r._id === resId ? { ...r, status } : r))
+      );
+      toast.success(`Reservation ${status}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to update reservation');
     }
   };
 
@@ -382,6 +400,12 @@ export const Dashboard = () => {
             <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
               <Package size={18} /> Orders
             </button>
+            <button className={`tab-btn ${activeTab === 'reservations' ? 'active' : ''}`} onClick={() => setActiveTab('reservations')}>
+              <Calendar size={18} /> Reservations
+              {reservations.filter(r => r.status === 'pending').length > 0 && (
+                <span className="tab-badge">{reservations.filter(r => r.status === 'pending').length}</span>
+              )}
+            </button>
             <button className={`tab-btn ${activeTab === 'menu' ? 'active' : ''}`} onClick={() => setActiveTab('menu')}>
               <UtensilsCrossed size={18} /> Menu Items
             </button>
@@ -448,6 +472,87 @@ export const Dashboard = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── RESERVATIONS TAB ── */}
+          {activeTab === 'reservations' && (
+            <div className="dashboard-orders">
+              <div className="section-header">
+                <h2>Table Reservations</h2>
+                <span className="badge" style={{ background: 'var(--color-primary)', color: '#fff' }}>
+                  {reservations.length} total · {reservations.filter(r => r.status === 'pending').length} pending
+                </span>
+              </div>
+              {reservations.length === 0 ? (
+                <div className="empty-state">
+                  <Calendar size={40} />
+                  <p>No reservations yet. Customers can book tables from the Dine Out page.</p>
+                </div>
+              ) : (
+                <div className="reservations-admin-list">
+                  {reservations.map((res) => {
+                    const customer = res.consumerId;
+                    const date = new Date(res.reservationDate);
+                    return (
+                      <div key={res._id} className={`reservation-admin-card card res-status-${res.status}`}>
+                        <div className="res-admin-header">
+                          <div className="res-admin-customer">
+                            <span className="res-customer-name">
+                              👤 {customer?.profile?.firstName || 'Customer'} {customer?.profile?.lastName || ''}
+                            </span>
+                            <span className="res-customer-email">{customer?.email || ''}</span>
+                          </div>
+                          <span className={`reservation-status-pill status-${res.status}`}>
+                            {res.status.charAt(0).toUpperCase() + res.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="res-admin-details">
+                          <span><Calendar size={13} /> {date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          <span><Clock size={13} /> {date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span><Users size={13} /> {res.partySize} guests</span>
+                          <span>🪑 Table {res.tableId}</span>
+                        </div>
+                        {res.specialRequests && (
+                          <p className="res-admin-special">📝 {res.specialRequests}</p>
+                        )}
+                        {res.status === 'pending' && (
+                          <div className="res-admin-actions">
+                            <button
+                              className="btn btn-sm res-confirm-btn"
+                              onClick={() => updateReservationStatus(res._id, 'confirmed')}
+                            >
+                              <CheckCircle size={15} /> Confirm
+                            </button>
+                            <button
+                              className="btn btn-sm res-cancel-btn"
+                              onClick={() => updateReservationStatus(res._id, 'cancelled')}
+                            >
+                              <XCircle size={15} /> Decline
+                            </button>
+                          </div>
+                        )}
+                        {res.status === 'confirmed' && (
+                          <div className="res-admin-actions">
+                            <button
+                              className="btn btn-sm res-complete-btn"
+                              onClick={() => updateReservationStatus(res._id, 'completed')}
+                            >
+                              <CheckCircle size={15} /> Mark Completed
+                            </button>
+                            <button
+                              className="btn btn-sm res-cancel-btn"
+                              onClick={() => updateReservationStatus(res._id, 'cancelled')}
+                            >
+                              <XCircle size={15} /> Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -61,6 +61,19 @@
   background: var(--primary-50);
 }
 
+.nav-link-dineout {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 180, 50, 0.08));
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.nav-link-dineout:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 180, 50, 0.15));
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .navbar-actions {
   display: flex;
   align-items: center;

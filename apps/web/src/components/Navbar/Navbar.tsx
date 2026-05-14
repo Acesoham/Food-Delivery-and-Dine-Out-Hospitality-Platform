@@ -28,6 +28,11 @@ export const Navbar = () => {
             Discover
           </Link>
 
+          <Link to="/dine-out" className="nav-link nav-link-dineout">
+            <ChefHat size={18} />
+            Dine Out
+          </Link>
+
           {isAuthenticated && (
             <>
               <Link to="/orders" className="nav-link">

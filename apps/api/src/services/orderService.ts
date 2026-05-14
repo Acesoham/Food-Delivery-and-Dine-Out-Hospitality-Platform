@@ -65,7 +65,10 @@ export const createOrder = async (consumerId: string, input: CreateOrderInput) =
     tax,
     total,
     status: 'pending',
-    payment: { status: 'pending', method: 'card' },
+    payment: {
+      status: 'pending',
+      method: (input as any).paymentMethod || 'card',
+    },
     deliveryAddress: input.deliveryAddress,
     tableReservation: input.tableReservation,
     statusHistory: [{ status: 'pending', timestamp: new Date() }],

@@ -116,3 +116,26 @@ export const reviewApi = {
       media,
     }),
 };
+
+// ─── Reservations ───
+export interface CreateReservationPayload {
+  restaurantId: string;
+  tableId: string;
+  reservationDate: string;
+  partySize: number;
+  specialRequests?: string;
+}
+
+export const reservationApi = {
+  create: (data: CreateReservationPayload) =>
+    api.post<{ success: boolean; data: any }>('/reservations', data),
+
+  getMyReservations: () =>
+    api.get<{ success: boolean; data: any[] }>('/reservations/my-reservations'),
+
+  getById: (id: string) =>
+    api.get<{ success: boolean; data: any }>(`/reservations/${id}`),
+
+  cancel: (id: string) =>
+    api.patch<{ success: boolean; data: any }>(`/reservations/${id}/cancel`),
+};

@@ -7,6 +7,7 @@ import { Home } from './pages/Home/Home';
 import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
 import { Discover } from './pages/Discover/Discover';
+import { DineOut } from './pages/DineOut/DineOut';
 import { RestaurantDetail } from './pages/RestaurantDetail/RestaurantDetail';
 import { Cart } from './pages/Cart/Cart';
 import { Orders } from './pages/Orders/Orders';
@@ -48,6 +49,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/discover" element={<Discover />} />
+          <Route path="/dine-out" element={<DineOut />} />
           <Route path="/restaurant/:id" element={<RestaurantDetail />} />
           <Route path="/cart" element={<Cart />} />
 
