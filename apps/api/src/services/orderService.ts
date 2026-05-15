@@ -160,7 +160,8 @@ export const getRestaurantOrders = async (restaurantId: string, status?: string)
   return Order.find(filter)
     .sort({ createdAt: -1 })
     .limit(50)
-    .populate('consumerId', 'profile');
+    .populate('consumerId', 'profile')
+    .populate('courierId', 'profile');
 };
 
 /**
@@ -180,15 +181,71 @@ export const getOrderById = async (orderId: string) => {
 };
 
 /**
- * Get available deliveries for couriers (orders that are 'ready' and need a courier)
+ * Haversine distance in km between two [lng, lat] points
+ */
+const haversineKm = (lng1: number, lat1: number, lng2: number, lat2: number): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+/**
+ * Calculate courier earnings based on delivery distance
+ * Base: ₹15 + ₹8 per km (min ₹30, max ₹200)
+ */
+export const calcEarnings = (distanceKm: number): number => {
+  const raw = 15 + distanceKm * 8;
+  return Math.min(200, Math.max(30, Math.round(raw)));
+};
+
+/**
+ * Get available deliveries for couriers.
+ * Shows ALL delivery orders that don't yet have a courier assigned,
+ * regardless of preparation status — so couriers see orders immediately.
+ * Enriched with distance (km) and estimated earnings (₹) for each order.
  */
 export const getAvailableDeliveries = async (courierLat: number, courierLng: number) => {
-  return Order.find({
-    status: 'ready',
+  const rawOrders = await Order.find({
+    status: { $in: ['pending', 'accepted', 'preparing', 'ready'] },
     type: 'delivery',
-    courierId: { $exists: false },
+    $or: [
+      { courierId: { $exists: false } },
+      { courierId: null },
+    ],
   })
     .sort({ createdAt: 1 })
-    .limit(20)
-    .populate('restaurantId', 'name address location');
+    .limit(30)
+    .populate('restaurantId', 'name address location')
+    .lean();
+
+  return rawOrders.map((order: any) => {
+    const rest = order.restaurantId;
+    let distanceKm = 0;
+    // Distance from courier → restaurant
+    if (rest?.location?.coordinates?.length === 2) {
+      const [rLng, rLat] = rest.location.coordinates;
+      if (courierLat && courierLng) {
+        distanceKm = haversineKm(courierLng, courierLat, rLng, rLat);
+      }
+    }
+    // If delivery address is available, add restaurant → customer distance
+    let totalKm = distanceKm;
+    if (order.deliveryAddress?.location?.coordinates?.length === 2) {
+      const [dLng, dLat] = order.deliveryAddress.location.coordinates;
+      const [rLng, rLat] = rest?.location?.coordinates ?? [dLng, dLat];
+      totalKm += haversineKm(rLng, rLat, dLng, dLat);
+    }
+
+    return {
+      ...order,
+      _distanceKm: Math.round(totalKm * 10) / 10,
+      _estimatedEarnings: calcEarnings(totalKm),
+    };
+  });
 };

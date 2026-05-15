@@ -16,14 +16,14 @@ export type OrderStatus = z.infer<typeof OrderStatus>;
 
 // Valid status transitions
 export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['accepted', 'cancelled'],
-  accepted: ['preparing', 'cancelled'],
-  preparing: ['ready', 'cancelled'],
-  ready: ['courier_assigned', 'cancelled'],
+  pending:          ['accepted', 'courier_assigned', 'cancelled'],
+  accepted:         ['preparing', 'courier_assigned', 'cancelled'],
+  preparing:        ['ready', 'courier_assigned', 'cancelled'],
+  ready:            ['courier_assigned', 'cancelled'],
   courier_assigned: ['in_transit'],
-  in_transit: ['delivered'],
-  delivered: [],
-  cancelled: [],
+  in_transit:       ['delivered'],
+  delivered:        [],
+  cancelled:        [],
 };
 
 export const PaymentStatus = z.enum(['pending', 'paid', 'failed', 'refunded']);

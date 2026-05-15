@@ -12,6 +12,7 @@ import { RestaurantDetail } from './pages/RestaurantDetail/RestaurantDetail';
 import { Cart } from './pages/Cart/Cart';
 import { Orders } from './pages/Orders/Orders';
 import { Dashboard } from './pages/Dashboard/Dashboard';
+import { CourierDashboard } from './pages/CourierDashboard/CourierDashboard';
 import { Checkout } from './pages/Checkout/Checkout';
 import { useAuthStore } from './store/authStore';
 
@@ -57,6 +58,7 @@ function App() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/courier-dashboard" element={<ProtectedRoute><CourierDashboard /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

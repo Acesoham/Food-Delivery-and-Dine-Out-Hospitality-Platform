@@ -8,6 +8,7 @@ import {
 import api from '../../services/api';
 import { restaurantApi, orderApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
+import { useSocket } from '../../hooks/useSocket';
 import type { IRestaurant, IMenuItem, IOrder } from 'shared-types';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
@@ -64,10 +65,30 @@ export const Dashboard = () => {
   const isCourier = user?.role === 'courier';
   const isMerchant = user?.role === 'merchant';
 
+  const { socket } = useSocket();
+
   useEffect(() => {
     if (!isMerchant) { setLoading(false); return; }
     fetchDashboardData();
   }, [user]);
+
+  // Listen for real-time courier assignments on the restaurant socket room
+  useEffect(() => {
+    if (!socket || !restaurant) return;
+    socket.emit('joinMerchantRoom' as any, restaurant._id);
+
+    const handleCourierAssigned = (data: any) => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o._id === data.orderId ? { ...o, status: 'courier_assigned' as any } : o
+        )
+      );
+      toast.success(`🛵 ${data.courierName || 'A courier'} accepted order #${data.orderId.slice(-6)}!`, { duration: 5000 });
+    };
+
+    socket.on('courierAssigned' as any, handleCourierAssigned);
+    return () => { socket.off('courierAssigned' as any, handleCourierAssigned); };
+  }, [socket, restaurant]);
 
   const fetchDashboardData = async () => {
     try {
@@ -289,15 +310,7 @@ export const Dashboard = () => {
 
   /* ══ COURIER DASHBOARD ═══════════════════════════════════════ */
   if (isCourier) {
-    return (
-      <div className="page container">
-        <div className="empty-dashboard">
-          <Bike size={48} />
-          <h2>Courier Dashboard</h2>
-          <p>Accept and manage deliveries here. Check available deliveries in <a href="/orders">Orders</a>.</p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/courier-dashboard" replace />;
   }
 
   /* ══ MERCHANT – NO RESTAURANT YET ═══════════════════════════ */
@@ -448,7 +461,7 @@ export const Dashboard = () => {
                   <table className="orders-table">
                     <thead>
                       <tr>
-                        <th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Update</th>
+                        <th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Courier</th><th>Status</th><th>Update</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -458,6 +471,15 @@ export const Dashboard = () => {
                           <td>{(order.consumerId as any)?.profile?.firstName || 'Customer'}</td>
                           <td>{order.items.length} items</td>
                           <td>₹{order.total}</td>
+                          <td>
+                            {(order.courierId as any)?.profile ? (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                                🛵 {(order.courierId as any).profile.firstName} {(order.courierId as any).profile.lastName}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>—</span>
+                            )}
+                          </td>
                           <td><span className={`badge status-${order.status}`}>{order.status}</span></td>
                           <td>
                             <select className="input select-sm" value={order.status} onChange={e => updateOrderStatus(order._id, e.target.value)}>

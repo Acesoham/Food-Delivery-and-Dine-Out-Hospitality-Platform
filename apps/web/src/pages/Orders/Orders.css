@@ -100,3 +100,40 @@
 .order-arrow {
   color: var(--text-muted);
 }
+
+/* ── Courier Assignment Banner ── */
+.order-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.courier-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1));
+  border: 1px solid rgba(16,185,129,0.35);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.85rem;
+  color: #10b981;
+  font-weight: 600;
+  animation: slide-in-banner 0.3s ease;
+}
+
+.courier-banner strong {
+  color: #34d399;
+}
+
+.order-card-wrapper .order-card {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top-color: rgba(16,185,129,0.2);
+}
+
+@keyframes slide-in-banner {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

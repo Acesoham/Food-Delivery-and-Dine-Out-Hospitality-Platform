@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, ChefHat, MapPin } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ChefHat, MapPin, Bike } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import './Navbar.css';
@@ -14,6 +14,11 @@ export const Navbar = () => {
     navigate('/');
   };
 
+  const role = user?.role;
+  const isConsumer = !isAuthenticated || role === 'consumer';
+  const isMerchant = isAuthenticated && role === 'merchant';
+  const isCourier = isAuthenticated && role === 'courier';
+
   return (
     <nav className="navbar">
       <div className="container navbar-inner">
@@ -23,36 +28,52 @@ export const Navbar = () => {
         </Link>
 
         <div className="navbar-links">
-          <Link to="/discover" className="nav-link">
-            <MapPin size={18} />
-            Discover
-          </Link>
-
-          <Link to="/dine-out" className="nav-link nav-link-dineout">
-            <ChefHat size={18} />
-            Dine Out
-          </Link>
-
-          {isAuthenticated && (
+          {/* Discover & Dine Out — only for consumers / logged-out users */}
+          {isConsumer && (
             <>
-              <Link to="/orders" className="nav-link">
-                My Orders
+              <Link to="/discover" className="nav-link">
+                <MapPin size={18} />
+                Discover
               </Link>
-              {user?.role === 'merchant' && (
-                <Link to="/dashboard" className="nav-link">
-                  <ChefHat size={18} />
-                  Dashboard
-                </Link>
-              )}
+              <Link to="/dine-out" className="nav-link nav-link-dineout">
+                <ChefHat size={18} />
+                Dine Out
+              </Link>
             </>
+          )}
+
+          {/* Consumer links */}
+          {isAuthenticated && isConsumer && (
+            <Link to="/orders" className="nav-link">
+              My Orders
+            </Link>
+          )}
+
+          {/* Merchant dashboard link */}
+          {isMerchant && (
+            <Link to="/dashboard" className="nav-link">
+              <ChefHat size={18} />
+              Dashboard
+            </Link>
+          )}
+
+          {/* Courier hub link */}
+          {isCourier && (
+            <Link to="/courier-dashboard" className="nav-link nav-link-courier">
+              <Bike size={18} />
+              Courier Hub
+            </Link>
           )}
         </div>
 
         <div className="navbar-actions">
-          <Link to="/cart" className="cart-btn">
-            <ShoppingCart size={20} />
-            {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
-          </Link>
+          {/* Cart — only for consumers */}
+          {isConsumer && (
+            <Link to="/cart" className="cart-btn">
+              <ShoppingCart size={20} />
+              {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
+            </Link>
+          )}
 
           {isAuthenticated ? (
             <div className="user-menu">
@@ -60,7 +81,7 @@ export const Navbar = () => {
                 <User size={18} />
                 <span>{user?.profile.firstName}</span>
               </Link>
-              {user && (
+              {isConsumer && user && (
                 <span className="loyalty-points" title="Loyalty Points">
                   ⭐ {user.loyaltyPoints}
                 </span>

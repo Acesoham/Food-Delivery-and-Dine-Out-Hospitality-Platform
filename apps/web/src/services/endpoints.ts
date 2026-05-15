@@ -90,8 +90,14 @@ export const orderApi = {
       params: { lat, lng },
     }),
 
+  getMyCourierDeliveries: () =>
+    api.get<{ success: boolean; data: IOrder[] }>('/orders/courier/my-deliveries'),
+
   acceptDelivery: (id: string) =>
     api.post<{ success: boolean; data: IOrder }>(`/orders/${id}/accept-delivery`),
+
+  updateDeliveryStatus: (id: string, status: 'in_transit' | 'delivered') =>
+    api.patch<{ success: boolean; data: IOrder }>(`/orders/${id}/status`, { status }),
 };
 
 // ─── Reviews ───
