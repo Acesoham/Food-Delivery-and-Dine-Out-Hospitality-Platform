@@ -19,6 +19,7 @@ router.get('/merchant/my-restaurants', authenticate, requireRole('merchant', 'ad
 // Menu management (merchant)
 router.post('/:id/menu', authenticate, requireRole('merchant', 'admin'), validate(CreateMenuItemSchema), ctrl.addMenuItem);
 router.patch('/:id/menu/:itemId', authenticate, requireRole('merchant', 'admin'), ctrl.updateMenuItem);
+router.patch('/:id/menu/:itemId/toggle-availability', authenticate, requireRole('merchant', 'admin'), ctrl.toggleMenuItemAvailability);
 router.delete('/:id/menu/:itemId', authenticate, requireRole('merchant', 'admin'), ctrl.deleteMenuItem);
 
 export default router;

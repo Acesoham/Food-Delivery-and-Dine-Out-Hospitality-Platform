@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, ChefHat, MapPin, Bike } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ChefHat, MapPin, Bike, CalendarHeart } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import './Navbar.css';
@@ -18,6 +18,7 @@ export const Navbar = () => {
   const isConsumer = !isAuthenticated || role === 'consumer';
   const isMerchant = isAuthenticated && role === 'merchant';
   const isCourier = isAuthenticated && role === 'courier';
+  const isOrganizer = isAuthenticated && role === 'event_organizer';
 
   return (
     <nav className="navbar">
@@ -42,11 +43,19 @@ export const Navbar = () => {
             </>
           )}
 
-          {/* Consumer links */}
-          {isAuthenticated && isConsumer && (
-            <Link to="/orders" className="nav-link">
-              My Orders
-            </Link>
+          {/* Consumer links: Orders + Events */}
+          {isConsumer && (
+            <>
+              <Link to="/events" className="nav-link">
+                <CalendarHeart size={18} />
+                Events
+              </Link>
+              {isAuthenticated && (
+                <Link to="/orders" className="nav-link">
+                  My Orders
+                </Link>
+              )}
+            </>
           )}
 
           {/* Merchant dashboard link */}
@@ -62,6 +71,14 @@ export const Navbar = () => {
             <Link to="/courier-dashboard" className="nav-link nav-link-courier">
               <Bike size={18} />
               Courier Hub
+            </Link>
+          )}
+
+          {/* Event Organizer dashboard link */}
+          {isOrganizer && (
+            <Link to="/event-organizer/dashboard" className="nav-link" style={{ color: '#7c3aed' }}>
+              <CalendarHeart size={18} />
+              My Events
             </Link>
           )}
         </div>

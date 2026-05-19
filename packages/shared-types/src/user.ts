@@ -8,7 +8,7 @@ export const GeoPointSchema = z.object({
 export type GeoPoint = z.infer<typeof GeoPointSchema>;
 
 // ─── User Roles ───
-export const UserRole = z.enum(['consumer', 'merchant', 'courier', 'admin']);
+export const UserRole = z.enum(['consumer', 'merchant', 'courier', 'admin', 'event_organizer']);
 export type UserRole = z.infer<typeof UserRole>;
 
 // ─── Address Schema ───

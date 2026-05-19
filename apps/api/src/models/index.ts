@@ -10,3 +10,7 @@ export { Review } from './Review';
 export type { ReviewDocument } from './Review';
 export { Reservation } from './Reservation';
 export type { ReservationDocument } from './Reservation';
+export { Event } from './Event';
+export type { EventDocument } from './Event';
+export { EventBooking } from './EventBooking';
+export type { EventBookingDocument } from './EventBooking';

@@ -21,7 +21,7 @@ const userSchema = new Schema<UserDocument>(
     },
     role: {
       type: String,
-      enum: ['consumer', 'merchant', 'courier', 'admin'],
+      enum: ['consumer', 'merchant', 'courier', 'admin', 'event_organizer'],
       default: 'consumer',
     },
     profile: {

@@ -13,6 +13,7 @@ export const RestaurantDetail = () => {
   const [menuItems, setMenuItems] = useState<IMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [conflictItem, setConflictItem] = useState<IMenuItem | null>(null);
   const { addItem, clearCart, items } = useCartStore();
 
   useEffect(() => {
@@ -49,22 +50,26 @@ export const RestaurantDetail = () => {
     });
 
     if (!success) {
-      if (window.confirm('Your cart has items from another restaurant. Clear cart and add this item?')) {
-        clearCart();
-        addItem({
-          menuItemId: item._id,
-          restaurantId: restaurant._id,
-          restaurantName: restaurant.name,
-          name: item.name,
-          price: item.price,
-          quantity: 1,
-          image: item.image,
-        });
-        toast.success('Cart updated!');
-      }
+      setConflictItem(item);
     } else {
       toast.success(`${item.name} added to cart`);
     }
+  };
+
+  const handleResolveConflict = () => {
+    if (!conflictItem || !restaurant) return;
+    clearCart();
+    addItem({
+      menuItemId: conflictItem._id,
+      restaurantId: restaurant._id,
+      restaurantName: restaurant.name,
+      name: conflictItem.name,
+      price: conflictItem.price,
+      quantity: 1,
+      image: conflictItem.image,
+    });
+    setConflictItem(null);
+    toast.success('Cart updated with new item!');
   };
 
   const getItemQuantity = (menuItemId: string) => {
@@ -198,6 +203,24 @@ export const RestaurantDetail = () => {
               ₹{items.reduce((s, i) => s + i.price * i.quantity, 0)}
             </span>
           </Link>
+        )}
+
+        {/* Cart Conflict Modal */}
+        {conflictItem && (
+          <div className="cart-conflict-overlay" onClick={() => setConflictItem(null)}>
+            <div className="cart-conflict-card" onClick={(e) => e.stopPropagation()}>
+              <h3>Start a new cart?</h3>
+              <p>Your cart contains items from a different restaurant. Would you like to clear the cart and add this item instead?</p>
+              <div className="cart-conflict-actions">
+                <button className="btn btn-ghost" onClick={() => setConflictItem(null)} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={handleResolveConflict} style={{ flex: 1 }}>
+                  Clear & Add
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

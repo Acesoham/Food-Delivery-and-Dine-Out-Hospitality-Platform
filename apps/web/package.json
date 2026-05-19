@@ -10,18 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.60.0",
+    "@types/qrcode.react": "^3.0.0",
+    "axios": "^1.7.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.460.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.6.0",
-    "zustand": "^5.0.0",
-    "axios": "^1.7.0",
-    "@tanstack/react-query": "^5.60.0",
-    "socket.io-client": "^4.8.0",
-    "leaflet": "^1.9.4",
-    "react-leaflet": "^5.0.0",
     "react-hot-toast": "^2.4.1",
-    "lucide-react": "^0.460.0",
-    "shared-types": "workspace:*"
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.6.0",
+    "shared-types": "workspace:*",
+    "socket.io-client": "^4.8.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

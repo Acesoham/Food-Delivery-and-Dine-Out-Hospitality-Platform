@@ -14,18 +14,14 @@ import { Orders } from './pages/Orders/Orders';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { CourierDashboard } from './pages/CourierDashboard/CourierDashboard';
 import { Checkout } from './pages/Checkout/Checkout';
+import { Events } from './pages/Events/Events';
+import { EventOrganizerDashboard } from './pages/EventOrganizerDashboard/Dashboard';
 import { useAuthStore } from './store/authStore';
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
-    },
-  },
+  defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 1 } },
 });
 
-// Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <div className="page container" style={{ textAlign: 'center', paddingTop: '40vh' }}>Loading...</div>;
@@ -35,10 +31,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const { checkAuth } = useAuthStore();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  useEffect(() => { checkAuth(); }, [checkAuth]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -53,12 +46,14 @@ function App() {
           <Route path="/dine-out" element={<DineOut />} />
           <Route path="/restaurant/:id" element={<RestaurantDetail />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/events" element={<Events />} />
 
           {/* Protected Routes */}
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/courier-dashboard" element={<ProtectedRoute><CourierDashboard /></ProtectedRoute>} />
+          <Route path="/event-organizer/dashboard" element={<ProtectedRoute><EventOrganizerDashboard /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

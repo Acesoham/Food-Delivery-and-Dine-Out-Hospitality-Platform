@@ -12,7 +12,7 @@ export const Register = () => {
     firstName: '',
     lastName: '',
     phone: '',
-    role: 'consumer' as 'consumer' | 'merchant' | 'courier',
+    role: 'consumer' as 'consumer' | 'merchant' | 'courier' | 'event_organizer',
   });
   const [loading, setLoading] = useState(false);
   const { register } = useAuthStore();
@@ -39,7 +39,10 @@ export const Register = () => {
         navigate('/dashboard');
       } else if (form.role === 'courier') {
         toast.success('Courier account created! Head to your dashboard.');
-        navigate('/dashboard');
+        navigate('/courier-dashboard');
+      } else if (form.role === 'event_organizer') {
+        toast.success('Event Organizer account created! 🎉 Create your first event.');
+        navigate('/event-organizer/dashboard');
       } else {
         toast.success('Account created! Welcome!');
         navigate('/discover');
@@ -101,9 +104,14 @@ export const Register = () => {
           <div className="input-group">
             <label>I am a</label>
             <div className="role-selector">
-              {(['consumer', 'merchant', 'courier'] as const).map((role) => (
-                <button key={role} type="button" className={`role-btn ${form.role === role ? 'active' : ''}`} onClick={() => update('role', role)}>
-                  {role === 'consumer' ? '🍽️ Customer' : role === 'merchant' ? '🏪 Restaurant' : '🚴 Courier'}
+              {([
+                { value: 'consumer', label: '🍽️ Customer' },
+                { value: 'merchant', label: '🏪 Restaurant' },
+                { value: 'courier', label: '🚴 Courier' },
+                { value: 'event_organizer', label: '🎪 Event Organizer' },
+              ] as const).map(({ value, label }) => (
+                <button key={value} type="button" className={`role-btn ${form.role === value ? 'active' : ''}`} onClick={() => update('role', value)}>
+                  {label}
                 </button>
               ))}
             </div>

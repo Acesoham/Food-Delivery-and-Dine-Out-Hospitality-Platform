@@ -18,8 +18,21 @@ export const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
-      toast.success('Welcome back!');
-      navigate('/discover');
+      const user = useAuthStore.getState().user;
+      const role = user?.role;
+      if (role === 'event_organizer') {
+        toast.success(`Welcome back, ${user?.profile.firstName}! 🎉`);
+        navigate('/event-organizer/dashboard');
+      } else if (role === 'merchant') {
+        toast.success('Welcome back!');
+        navigate('/dashboard');
+      } else if (role === 'courier') {
+        toast.success('Welcome back!');
+        navigate('/courier-dashboard');
+      } else {
+        toast.success('Welcome back!');
+        navigate('/discover');
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Login failed');
     } finally {

@@ -202,3 +202,25 @@ export const deleteMenuItem = async (restaurantId: string, itemId: string, owner
 export const getMerchantRestaurants = async (ownerId: string) => {
   return Restaurant.find({ ownerId }).sort({ createdAt: -1 });
 };
+
+/**
+ * Toggle a menu item's availability (merchant secure portal)
+ */
+export const toggleMenuItemAvailability = async (
+  restaurantId: string,
+  itemId: string,
+  ownerId: string
+) => {
+  const restaurant = await Restaurant.findOne({ _id: restaurantId, ownerId });
+  if (!restaurant) {
+    throw Object.assign(new Error('Restaurant not found or unauthorized'), { statusCode: 403 });
+  }
+  const menuItem = await MenuItem.findOne({ _id: itemId, restaurantId });
+  if (!menuItem) {
+    throw Object.assign(new Error('Menu item not found'), { statusCode: 404 });
+  }
+  menuItem.isAvailable = !menuItem.isAvailable;
+  await menuItem.save();
+  return menuItem;
+};
+
