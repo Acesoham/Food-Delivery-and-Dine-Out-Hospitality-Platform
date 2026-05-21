@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
+import { Order } from '../models';
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
@@ -79,13 +80,31 @@ export const initializeSocket = (httpServer: HttpServer) => {
     });
 
     // ─── Courier Location Updates ───
-    socket.on('updateCourierLocation', (data) => {
+    socket.on('updateCourierLocation', async (data) => {
       if (socket.data.role !== 'courier') return;
+
+      const lat = Number(data.lat);
+      const lng = Number(data.lng);
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180
+      ) {
+        return;
+      }
+
+      await Order.updateOne(
+        { _id: data.orderId, courierId: socket.data.userId },
+        { courierLocation: { type: 'Point', coordinates: [lng, lat] } }
+      ).catch((error) => console.error('Failed to persist courier location:', error));
 
       // Broadcast to order room (consumer tracking the delivery)
       io.to(`order:${data.orderId}`).emit('courierLocationUpdate', {
         orderId: data.orderId,
-        location: { lat: data.lat, lng: data.lng },
+        location: { lat, lng },
         estimatedArrival: 0, // TODO: Calculate based on distance
       });
     });

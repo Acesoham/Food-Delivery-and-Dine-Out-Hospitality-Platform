@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { orderApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
+import { useSocket } from '../../hooks/useSocket';
 import type { IOrder } from 'shared-types';
 import toast from 'react-hot-toast';
 import './CourierDashboard.css';
@@ -50,6 +51,7 @@ const statusPillClass: Record<string, string> = {
 /* ── Component ── */
 export const CourierDashboard = () => {
   const { user } = useAuthStore();
+  const { updateCourierLocation } = useSocket();
 
   const [tab, setTab] = useState<'available' | 'active' | 'history'>('available');
 
@@ -98,6 +100,12 @@ export const CourierDashboard = () => {
     fetchMyOrders();
   }, [fetchAvailable, fetchMyOrders]);
 
+  useEffect(() => {
+    myOrders
+      .filter((order) => ['courier_assigned', 'in_transit'].includes(order.status))
+      .forEach((order) => updateCourierLocation(order._id, lat, lng));
+  }, [lat, lng, myOrders, updateCourierLocation]);
+
   /* ── Get real geolocation ── */
   const getLocation = () => {
     setLocating(true);
@@ -108,6 +116,7 @@ export const CourierDashboard = () => {
         setLocationText(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
         setLocating(false);
         toast.success('Location updated!');
+        active.forEach((order) => updateCourierLocation(order._id, pos.coords.latitude, pos.coords.longitude));
         fetchAvailable();
       },
       () => {
@@ -121,7 +130,8 @@ export const CourierDashboard = () => {
   const acceptDelivery = async (order: CourierOrder) => {
     setAcceptingId(order._id);
     try {
-      const { data } = await orderApi.acceptDelivery(order._id);
+      const { data } = await orderApi.acceptDelivery(order._id, { lat, lng });
+      updateCourierLocation(order._id, lat, lng);
       toast.success(`🛵 You're delivering from ${order.restaurantId?.name || 'restaurant'}!`);
       setAvailable((prev) => prev.filter((o) => o._id !== order._id));
       setMyOrders((prev) => [data.data as CourierOrder, ...prev]);
@@ -139,6 +149,7 @@ export const CourierDashboard = () => {
     try {
       const { data } = await orderApi.updateDeliveryStatus(orderId, status);
       setMyOrders((prev) => prev.map((o) => (o._id === orderId ? (data.data as CourierOrder) : o)));
+      updateCourierLocation(orderId, lat, lng);
       const msgs: Record<string, string> = {
         in_transit: '🚀 Marked as In Transit!',
         delivered: '🎉 Order delivered! Great work!',

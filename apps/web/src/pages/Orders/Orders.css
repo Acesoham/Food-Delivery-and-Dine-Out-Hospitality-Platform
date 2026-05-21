@@ -127,13 +127,60 @@
   color: #34d399;
 }
 
-.order-card-wrapper .order-card {
+.courier-banner + .order-card {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   border-top-color: rgba(16,185,129,0.2);
 }
 
+.order-card-wrapper.has-map .order-card {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.order-map-panel {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 14px;
+  background: var(--bg-secondary);
+}
+
+.order-card-wrapper .order-card + .order-map-panel {
+  margin-top: -1px;
+}
+
+.order-map-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.order-map-header span:first-child {
+  color: var(--text);
+}
+
+.order-map-panel .google-map {
+  border-radius: 10px;
+}
+
 @keyframes slide-in-banner {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .order-card-header,
+  .order-map-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .order-card-footer {
+    flex-wrap: wrap;
+  }
 }

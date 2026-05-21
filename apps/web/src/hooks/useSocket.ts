@@ -75,6 +75,10 @@ export const useSocket = () => {
     []
   );
 
+  const updateCourierLocation = useCallback((orderId: string, lat: number, lng: number) => {
+    socketRef.current?.emit('updateCourierLocation', { orderId, lat, lng });
+  }, []);
+
   return {
     socket: socketRef.current,
     joinOrderRoom,
@@ -82,5 +86,6 @@ export const useSocket = () => {
     onOrderStatusUpdate,
     onCourierLocationUpdate,
     onNewOrder,
+    updateCourierLocation,
   };
 };

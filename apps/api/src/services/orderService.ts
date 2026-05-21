@@ -140,7 +140,8 @@ export const getConsumerOrders = async (consumerId: string, page = 1, limit = 10
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('restaurantId', 'name slug images'),
+      .populate('restaurantId', 'name slug images address location')
+      .populate('courierId', 'profile'),
     Order.countDocuments({ consumerId }),
   ]);
 
@@ -169,7 +170,7 @@ export const getRestaurantOrders = async (restaurantId: string, status?: string)
  */
 export const getOrderById = async (orderId: string) => {
   const order = await Order.findById(orderId)
-    .populate('restaurantId', 'name slug images address contact')
+    .populate('restaurantId', 'name slug images address contact location')
     .populate('consumerId', 'profile')
     .populate('courierId', 'profile');
 

@@ -93,8 +93,8 @@ export const orderApi = {
   getMyCourierDeliveries: () =>
     api.get<{ success: boolean; data: IOrder[] }>('/orders/courier/my-deliveries'),
 
-  acceptDelivery: (id: string) =>
-    api.post<{ success: boolean; data: IOrder }>(`/orders/${id}/accept-delivery`),
+  acceptDelivery: (id: string, location?: { lat: number; lng: number }) =>
+    api.post<{ success: boolean; data: IOrder }>(`/orders/${id}/accept-delivery`, location || {}),
 
   updateDeliveryStatus: (id: string, status: 'in_transit' | 'delivered') =>
     api.patch<{ success: boolean; data: IOrder }>(`/orders/${id}/status`, { status }),

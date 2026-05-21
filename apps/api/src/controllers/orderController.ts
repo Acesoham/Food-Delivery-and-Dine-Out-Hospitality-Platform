@@ -123,9 +123,27 @@ export const acceptDelivery = async (req: Request, res: Response, next: NextFunc
       'courier'
     );
 
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+    const hasCourierLocation =
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      lat >= -90 &&
+      lat <= 90 &&
+      lng >= -180 &&
+      lng <= 180;
+
+    if (hasCourierLocation) {
+      order.courierLocation = {
+        type: 'Point',
+        coordinates: [lng, lat],
+      } as any;
+      await order.save();
+    }
+
     // Populate courier details to send in socket events
     const populatedOrder = await Order.findById(order._id)
-      .populate('restaurantId', 'name address')
+      .populate('restaurantId', 'name address location')
       .populate('consumerId', 'profile')
       .populate('courierId', 'profile');
 
@@ -163,6 +181,13 @@ export const acceptDelivery = async (req: Request, res: Response, next: NextFunc
       // Notify consumer
       io.to(`order:${order._id}`).emit('orderStatusUpdate', payload);
       io.to(`order:${order._id}`).emit('courierAssigned', payload);
+      if (hasCourierLocation) {
+        io.to(`order:${order._id}`).emit('courierLocationUpdate', {
+          orderId: order._id.toString(),
+          location: { lat, lng },
+          estimatedArrival: 0,
+        });
+      }
 
       // Notify restaurant owner
       io.to(`restaurant:${order.restaurantId}`).emit('courierAssigned', payload);

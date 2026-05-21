@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Package, ChevronRight, Loader2, Bike } from 'lucide-react';
 import { orderApi } from '../../services/endpoints';
 import { useSocket } from '../../hooks/useSocket';
+import { GoogleMap, type MapPoint } from '../../components/GoogleMap/GoogleMap';
 import type { IOrder } from 'shared-types';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -21,14 +22,29 @@ const STATUS_LABELS: Record<string, string> = {
 /* Extended order type — omits string-typed ref fields, redefines as populated objects */
 interface ExtOrder extends Omit<IOrder, 'courierId' | 'restaurantId'> {
   courierId?: { profile?: { firstName: string; lastName: string } } | null;
-  restaurantId?: { name?: string; address?: any } | null;
+  restaurantId?: { name?: string; address?: any; location?: GeoPoint } | null;
   _courierName?: string;
 }
 
+type GeoPoint = { type: 'Point'; coordinates: [number, number] };
+type CourierLocationMap = Record<string, MapPoint>;
+
+const geoPointToMapPoint = (point: GeoPoint | undefined, label: string, title?: string): MapPoint | null => {
+  const coordinates = point?.coordinates;
+  if (!coordinates || coordinates.length !== 2) return null;
+  const [lng, lat] = coordinates;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng, label, title };
+};
+
+const compactPoints = (points: Array<MapPoint | null>) =>
+  points.filter((point): point is MapPoint => Boolean(point));
+
 export const Orders = () => {
   const [orders, setOrders] = useState<ExtOrder[]>([]);
+  const [courierLocations, setCourierLocations] = useState<CourierLocationMap>({});
   const [loading, setLoading] = useState(true);
-  const { onOrderStatusUpdate } = useSocket();
+  const { joinOrderRoom, leaveOrderRoom, onOrderStatusUpdate, onCourierLocationUpdate } = useSocket();
 
   /* ── Fetch orders ── */
   const fetchOrders = useCallback(async () => {
@@ -45,6 +61,17 @@ export const Orders = () => {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  useEffect(() => {
+    const trackableOrders = orders.filter((order) =>
+      order.type === 'delivery' && !['delivered', 'cancelled'].includes(order.status)
+    );
+    trackableOrders.forEach((order) => joinOrderRoom(order._id));
+
+    return () => {
+      trackableOrders.forEach((order) => leaveOrderRoom(order._id));
+    };
+  }, [orders, joinOrderRoom, leaveOrderRoom]);
 
   /* ── Real-time order status updates ── */
   useEffect(() => {
@@ -69,6 +96,22 @@ export const Orders = () => {
 
     return () => { unsubscribe?.(); };
   }, [onOrderStatusUpdate]);
+
+  useEffect(() => {
+    const unsubscribe = onCourierLocationUpdate((data) => {
+      setCourierLocations((prev) => ({
+        ...prev,
+        [data.orderId]: {
+          lat: data.location.lat,
+          lng: data.location.lng,
+          label: 'D',
+          title: 'Delivery partner',
+        },
+      }));
+    });
+
+    return () => { unsubscribe?.(); };
+  }, [onCourierLocationUpdate]);
 
   /* ── Loading ── */
   if (loading) {
@@ -103,9 +146,25 @@ export const Orders = () => {
 
               const showCourierBanner =
                 !!courierName && ['courier_assigned', 'in_transit'].includes(order.status);
+              const restaurantPoint = geoPointToMapPoint(
+                order.restaurantId?.location,
+                'R',
+                order.restaurantId?.name || 'Restaurant'
+              );
+              const courierPoint =
+                courierLocations[order._id] ||
+                geoPointToMapPoint(order.courierLocation as GeoPoint | undefined, 'D', 'Delivery partner');
+              const deliveryPoint = geoPointToMapPoint(
+                order.deliveryAddress?.location as GeoPoint | undefined,
+                'Y',
+                'Your delivery address'
+              );
+              const trackingMarkers = compactPoints([restaurantPoint, courierPoint, deliveryPoint]);
+              const routePath = compactPoints([restaurantPoint, courierPoint, deliveryPoint]);
+              const showTrackingMap = order.type === 'delivery' && trackingMarkers.length > 0;
 
               return (
-                <div key={order._id} className="order-card-wrapper">
+                <div key={order._id} className={`order-card-wrapper ${showTrackingMap ? 'has-map' : ''}`}>
                   {showCourierBanner && (
                     <div className="courier-banner">
                       <Bike size={15} />
@@ -143,6 +202,24 @@ export const Orders = () => {
                       </div>
                     </div>
                   </Link>
+                  {showTrackingMap && (
+                    <div className="order-map-panel">
+                      <div className="order-map-header">
+                        <span>{order.restaurantId?.name || 'Restaurant'}</span>
+                        {courierPoint ? (
+                          <span>{courierName || 'Delivery partner'} assigned</span>
+                        ) : (
+                          <span>Awaiting delivery partner</span>
+                        )}
+                      </div>
+                      <GoogleMap
+                        markers={trackingMarkers}
+                        path={routePath}
+                        height={260}
+                        fallbackQuery={restaurantPoint ? `${restaurantPoint.lat},${restaurantPoint.lng}` : undefined}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
