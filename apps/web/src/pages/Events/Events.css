@@ -436,6 +436,12 @@
   font-weight: 600;
 }
 
+/* Payment icon styles for booking modal */
+.payment-icon-upi {
+  background: rgba(255, 107, 0, 0.12);
+  color: #ea580c;
+}
+
 /* My bookings list */
 .events-bookings-list {
   display: flex;

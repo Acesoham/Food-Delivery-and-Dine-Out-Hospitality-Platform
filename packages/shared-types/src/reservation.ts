@@ -21,13 +21,18 @@ export type ReservationStatus = z.infer<typeof ReservationStatus>;
 
 export interface IReservation {
   _id: string;
-  consumerId: string;
-  restaurantId: string;
+  consumerId: string | any; // populated User
+  restaurantId: string | any; // populated Restaurant
   tableId: string;
-  reservationDate: string;
+  reservationDate: Date | string;
   partySize: number;
-  status: ReservationStatus;
+  totalAmount?: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+  paymentStatus?: 'pending' | 'completed' | 'failed';
+  paymentMethod?: 'online' | 'upi' | 'cod';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   specialRequests?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

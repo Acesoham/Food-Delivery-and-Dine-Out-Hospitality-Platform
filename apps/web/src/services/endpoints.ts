@@ -145,3 +145,30 @@ export const reservationApi = {
   cancel: (id: string) =>
     api.patch<{ success: boolean; data: any }>(`/reservations/${id}/cancel`),
 };
+
+// ─── Payments (Razorpay) ───
+export const paymentApi = {
+  /** Creates a Razorpay order via backend (returns razorpay_order_id, amount, currency) */
+  createRazorpayOrder: (type: 'order' | 'event' | 'reservation', refId: string) =>
+    api.post<{
+      success: boolean;
+      data: { razorpay_order_id: string; amount: number; currency: string; key_id: string };
+    }>('/payments/create-order', { type, refId }),
+
+  /** Verifies Razorpay payment signature and marks order/booking as paid */
+  verifyPayment: (data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    type: 'order' | 'event' | 'reservation';
+    refId: string;
+  }) =>
+    api.post<{ success: boolean; data: { paymentId: string } }>('/payments/verify', data),
+
+  /** TEST MODE ONLY: Simulates a UPI payment without real Razorpay signature */
+  simulateUpiPayment: (type: 'order' | 'event' | 'reservation', refId: string) =>
+    api.post<{ success: boolean; data: { paymentId: string; simulated: boolean } }>(
+      '/payments/simulate-upi',
+      { type, refId }
+    ),
+};

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Star, Users, Calendar, Clock, X, CheckCircle, ChefHat, Loader2, Filter } from 'lucide-react';
-import { restaurantApi, reservationApi } from '../../services/endpoints';
+import { Search, MapPin, Star, Users, Calendar, Clock, X, CheckCircle, ChefHat, Loader2, Filter, CreditCard, Smartphone } from 'lucide-react';
+import { restaurantApi, reservationApi, paymentApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
+import { useRazorpay } from '../../hooks/useRazorpay';
+import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModal';
 import type { IRestaurant } from 'shared-types';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -45,8 +47,14 @@ export const DineOut = () => {
     partySize: 2,
     specialRequests: '',
   });
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'upi'>('online');
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const { openRazorpay } = useRazorpay();
+
+  // UPI modal state
+  const [upiModalOpen, setUpiModalOpen] = useState(false);
+  const [upiReservationId, setUpiReservationId] = useState<string | null>(null);
 
   // My reservations state
   const [showMyReservations, setShowMyReservations] = useState(false);
@@ -120,6 +128,7 @@ export const DineOut = () => {
     setShowModal(false);
     setSelectedRestaurant(null);
     setSuccessMsg('');
+    setPaymentMethod('online');
   };
 
   const getAvailableTables = () => {
@@ -138,20 +147,77 @@ export const DineOut = () => {
     const reservationDate = new Date(`${booking.reservationDate}T${booking.reservationTime}:00`).toISOString();
     setSubmitting(true);
     try {
-      await reservationApi.create({
+      // Step 1: Create Reservation
+      const resData = await reservationApi.create({
         restaurantId: (selectedRestaurant as any)._id,
         tableId: booking.tableId,
         reservationDate,
         partySize: booking.partySize,
         specialRequests: booking.specialRequests || undefined,
-      });
+        paymentMethod,
+      } as any);
+
+      const reservationId = resData.data.data._id;
+      const reservationAmount = resData.data.data.totalAmount; // ₹99 flat fee
+
+      // Step 2a: UPI custom modal
+      if (paymentMethod === 'upi') {
+        await paymentApi.createRazorpayOrder('reservation', reservationId);
+        setUpiReservationId(reservationId);
+        setUpiModalOpen(true);
+        setShowModal(false); // Close the booking modal, UPI modal will take over
+        setSubmitting(false);
+        return;
+      }
+
+      // Step 2b: Online Razorpay checkout
+      if (paymentMethod === 'online') {
+        const razorpayRes = await paymentApi.createRazorpayOrder('reservation', reservationId);
+        const { razorpay_order_id, amount, currency } = razorpayRes.data.data;
+
+        const paymentResponse = await openRazorpay({
+          razorpayOrderId: razorpay_order_id,
+          amountInRupees: amount / 100,
+          currency,
+          name: 'FoodHub Reservations',
+          description: `Table for ${booking.partySize} at ${selectedRestaurant.name}`,
+          preferUpi: false,
+        });
+
+        await paymentApi.verifyPayment({
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+          type: 'reservation',
+          refId: reservationId,
+        });
+      }
+
       setSuccessMsg(`Your table at ${selectedRestaurant.name} has been reserved! We'll confirm shortly.`);
       toast.success('Reservation placed successfully! 🍽️');
+      fetchMyReservations(); // silently refresh
     } catch (err: any) {
+      if (err?.message === 'Payment cancelled by user') {
+        toast.error('Payment cancelled. Reservation was not completed.');
+        return;
+      }
       toast.error(err?.response?.data?.error || 'Failed to create reservation');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleUpiSuccess = () => {
+    setUpiModalOpen(false);
+    setUpiReservationId(null);
+    toast.success('🎉 UPI Payment successful! Reservation confirmed.');
+    fetchMyReservations();
+  };
+
+  const handleUpiCancel = () => {
+    setUpiModalOpen(false);
+    setUpiReservationId(null);
+    toast.error('Payment cancelled. Reservation was not completed.');
   };
 
   const handleCancelReservation = async (id: string) => {
@@ -419,9 +485,31 @@ export const DineOut = () => {
                     />
                   </div>
 
-                  <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
+                  <div className="form-group" style={{ marginTop: '1rem' }}>
+                    <label>Payment Method (Booking Fee: ₹99)</label>
+                    <div className="payment-options" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <button
+                        type="button"
+                        className={`btn ${paymentMethod === 'online' ? 'btn-primary' : 'btn-outline'}`}
+                        onClick={() => setPaymentMethod('online')}
+                        style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
+                      >
+                        <CreditCard size={18} /> Online
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${paymentMethod === 'upi' ? 'btn-primary' : 'btn-outline'}`}
+                        onClick={() => setPaymentMethod('upi')}
+                        style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
+                      >
+                        <Smartphone size={18} /> UPI
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="btn btn-primary btn-block" disabled={submitting} style={{ marginTop: '1rem' }}>
                     {submitting ? <Loader2 size={18} className="spin" /> : <Calendar size={18} />}
-                    {submitting ? 'Booking...' : 'Confirm Reservation'}
+                    {submitting ? 'Booking...' : `Pay ₹99 & Confirm Reservation`}
                   </button>
                 </form>
               </>
@@ -487,6 +575,17 @@ export const DineOut = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Custom UPI Payment Modal for reservations */}
+      {upiModalOpen && upiReservationId && (
+        <UpiPaymentModal
+          amount={99}
+          orderId={upiReservationId}
+          type="reservation"
+          onSuccess={handleUpiSuccess}
+          onCancel={handleUpiCancel}
+        />
       )}
     </div>
   );

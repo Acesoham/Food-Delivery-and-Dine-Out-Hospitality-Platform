@@ -7,6 +7,7 @@ export interface CreateReservationInput {
   reservationDate: string; // ISO string
   partySize: number;
   specialRequests?: string;
+  paymentMethod?: 'online' | 'upi' | 'cod';
 }
 
 export const createReservation = async (
@@ -34,13 +35,18 @@ export const createReservation = async (
   });
   if (conflict) throw Object.assign(new Error('Table already booked for this time slot'), { statusCode: 409 });
 
+  const totalAmount = 99; // Flat ₹99 reservation booking fee
+
   const reservation = await Reservation.create({
     consumerId,
     restaurantId: input.restaurantId,
     tableId: input.tableId,
     reservationDate: slotStart,
     partySize: input.partySize,
+    totalAmount,
     specialRequests: input.specialRequests,
+    paymentMethod: input.paymentMethod || 'online',
+    paymentStatus: 'pending',
     status: 'pending',
   });
 

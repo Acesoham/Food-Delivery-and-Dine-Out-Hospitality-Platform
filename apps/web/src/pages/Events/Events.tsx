@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, Ticket, Search, Filter, ChevronDown, Clock, Tag, Download, CreditCard, Banknote, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Ticket, Search, Filter, ChevronDown, Clock, Tag, Download, CreditCard, Banknote, CheckCircle2, Loader2, Smartphone } from 'lucide-react';
 import api from '../../services/api';
+import { paymentApi } from '../../services/endpoints';
 import { jsPDF } from 'jspdf';
 import { QRCodeCanvas } from 'qrcode.react';
 import { createRoot } from 'react-dom/client';
 import { useAuthStore } from '../../store/authStore';
+import { useRazorpay } from '../../hooks/useRazorpay';
+import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModal';
 import toast from 'react-hot-toast';
 import './Events.css';
 
@@ -53,10 +56,15 @@ export const Events = () => {
   // Booking modal
   const [bookingEvent, setBookingEvent] = useState<IEvent | null>(null);
   const [tickets, setTickets] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
-  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'upi' | 'cod'>('online');
   const [booking, setBooking] = useState(false);
   const [downloadingTicketId, setDownloadingTicketId] = useState<string | null>(null);
+  const { openRazorpay } = useRazorpay();
+
+  // UPI modal state (for event bookings)
+  const [upiModalOpen, setUpiModalOpen] = useState(false);
+  const [upiBookingId, setUpiBookingId] = useState<string | null>(null);
+  const [upiAmount, setUpiAmount] = useState(0);
 
   // User bookings
   const [myBookings, setMyBookings] = useState<any[]>([]);
@@ -100,26 +108,88 @@ export const Events = () => {
     if (!isAuthenticated) { toast.error('Please log in to book tickets'); return; }
     if (!bookingEvent) return;
 
-    if (paymentMethod === 'online' && !showCardDetails && bookingEvent.ticketPrice > 0) {
-      setShowCardDetails(true);
-      return;
-    }
-
     setBooking(true);
     try {
-      await api.post(`/events/${bookingEvent._id}/book`, { tickets, paymentMethod });
-      toast.success(`🎉 Booked ${tickets} ticket(s) for "${bookingEvent.title}"!`);
+      // Step 1: Book the event (creates booking record in DB)
+      const bookingRes = await api.post(`/events/${bookingEvent._id}/book`, {
+        tickets,
+        paymentMethod: paymentMethod === 'upi' ? 'upi' : paymentMethod,
+      });
+      const bookingId = bookingRes.data.data._id as string;
+      const bookingAmount = bookingEvent.ticketPrice * tickets;
+
+      // Step 2a: UPI → open our custom UPI modal (QR + apps)
+      if (paymentMethod === 'upi' && bookingEvent.ticketPrice > 0) {
+        await paymentApi.createRazorpayOrder('event', bookingId); // create Razorpay order on backend
+        setUpiBookingId(bookingId);
+        setUpiAmount(bookingAmount);
+        setBookingEvent(null);
+        setUpiModalOpen(true);
+        setBooking(false);
+        return;
+      }
+
+      // Step 2b: Online (card/netbanking) → open Razorpay popup
+      if (paymentMethod === 'online' && bookingEvent.ticketPrice > 0) {
+        const razorpayRes = await paymentApi.createRazorpayOrder('event', bookingId);
+        const { razorpay_order_id, amount, currency } = razorpayRes.data.data;
+
+        const paymentResponse = await openRazorpay({
+          razorpayOrderId: razorpay_order_id,
+          amountInRupees: amount / 100,
+          currency,
+          name: 'FoodHub Events',
+          description: `${tickets} ticket(s) · ${bookingEvent.title}`,
+          preferUpi: false,
+        });
+
+        await paymentApi.verifyPayment({
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+          type: 'event',
+          refId: bookingId,
+        });
+
+        toast.success(`🎉 Payment successful! Booked ${tickets} ticket(s) for "${bookingEvent.title}"!`);
+      } else {
+        // COD / free events
+        toast.success(`🎉 Booked ${tickets} ticket(s) for "${bookingEvent.title}"!`);
+      }
+
       setBookingEvent(null);
       setTickets(1);
       setPaymentMethod('online');
-      setShowCardDetails(false);
       fetchEvents();
       fetchMyBookings();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Booking failed');
+      if (err?.message === 'Payment cancelled by user') {
+        toast.error('Payment cancelled. Your booking is saved.');
+        setBookingEvent(null);
+        fetchMyBookings();
+        return;
+      }
+      toast.error(err.response?.data?.error || err.message || 'Booking failed');
     } finally {
       setBooking(false);
     }
+  };
+
+  // UPI modal success callback (events)
+  const handleUpiBookingSuccess = () => {
+    setUpiModalOpen(false);
+    setUpiBookingId(null);
+    toast.success('🎉 UPI Payment successful! Your booking is confirmed.');
+    fetchEvents();
+    fetchMyBookings();
+  };
+
+  // UPI modal cancel callback (events)
+  const handleUpiBookingCancel = () => {
+    setUpiModalOpen(false);
+    setUpiBookingId(null);
+    toast('Booking saved. You can download your ticket from My Bookings.', { icon: 'ℹ️' });
+    fetchMyBookings();
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -193,6 +263,7 @@ export const Events = () => {
     : events;
 
   return (
+    <>
     <div className="events-page page">
       <div className="container">
         {/* Hero */}
@@ -367,52 +438,15 @@ export const Events = () => {
         <div className="modal-overlay" onClick={() => setBookingEvent(null)}>
           <div className="modal-card card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{showCardDetails ? 'Enter Card Details' : 'Book Tickets'}</h2>
-              <button className="btn-icon btn-ghost" onClick={() => { setBookingEvent(null); setShowCardDetails(false); }}>✕</button>
+              <h2>Book Tickets</h2>
+              <button className="btn-icon btn-ghost" onClick={() => { setBookingEvent(null); }}>✕</button>
             </div>
             <div className="modal-body">
-              {showCardDetails ? (
-                <div className="card-details-form" style={{ padding: '0.5rem 0' }}>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                    Please enter your card details to complete the payment of <strong>₹{bookingEvent.ticketPrice * tickets}</strong>. This is a secure test payment.
-                  </p>
-                  <div className="input-group" style={{ marginBottom: '1rem' }}>
-                    <label>Card Number</label>
-                    <input type="text" className="input" placeholder="0000 0000 0000 0000" maxLength={19} />
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                    <div className="input-group" style={{ flex: 1 }}>
-                      <label>Expiry (MM/YY)</label>
-                      <input type="text" className="input" placeholder="MM/YY" maxLength={5} />
-                    </div>
-                    <div className="input-group" style={{ flex: 1 }}>
-                      <label>CVV</label>
-                      <input type="password" className="input" placeholder="123" maxLength={3} />
-                    </div>
-                  </div>
-                  <div className="input-group" style={{ marginBottom: '2rem' }}>
-                    <label>Name on Card</label>
-                    <input type="text" className="input" placeholder="e.g. Jane Doe" />
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="btn btn-ghost" onClick={() => setShowCardDetails(false)}>Back</button>
-                    <button
-                      className="btn btn-primary"
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                      onClick={handleBook}
-                      disabled={booking}
-                    >
-                      {booking ? <Loader2 size={18} className="spin" /> : <><CreditCard size={18} /> Confirm Payment · ₹{bookingEvent.ticketPrice * tickets}</>}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="booking-event-preview">
-                    <img src={bookingEvent.imageUrl || `https://picsum.photos/seed/${bookingEvent._id}/400/200`} alt={bookingEvent.title} />
-                    <div>
-                      <h3>{bookingEvent.title}</h3>
-                      <p><Calendar size={13} /> {new Date(bookingEvent.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <div className="booking-event-preview">
+                <img src={bookingEvent.imageUrl || `https://picsum.photos/seed/${bookingEvent._id}/400/200`} alt={bookingEvent.title} />
+                <div>
+                  <h3>{bookingEvent.title}</h3>
+                  <p><Calendar size={13} /> {new Date(bookingEvent.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   <p><MapPin size={13} /> {bookingEvent.venue.name}, {bookingEvent.venue.city}</p>
                   <p><Users size={13} /> {bookingEvent.availableSeats} seats available</p>
                 </div>
@@ -434,7 +468,9 @@ export const Events = () => {
               {bookingEvent.ticketPrice > 0 && (
                 <div className="payment-section" style={{ marginTop: '1.5rem', padding: 0 }}>
                   <h4 style={{ marginBottom: '1rem', color: 'var(--text)' }}>Payment Method</h4>
-                  <div className="payment-options" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                  <div className="payment-options" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
+
+                    {/* Online (Card / Netbanking) */}
                     <button
                       type="button"
                       className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
@@ -446,12 +482,31 @@ export const Events = () => {
                         </span>
                         <div>
                           <span className="payment-label">Online Payment</span>
-                          <span className="payment-sub">Card, UPI, or Netbanking</span>
+                          <span className="payment-sub">Card or Netbanking via Razorpay</span>
                         </div>
                       </div>
                       {paymentMethod === 'online' && <CheckCircle2 size={20} className="payment-check" />}
                     </button>
-                    
+
+                    {/* UPI */}
+                    <button
+                      type="button"
+                      className={`payment-card ${paymentMethod === 'upi' ? 'selected' : ''}`}
+                      onClick={() => setPaymentMethod('upi')}
+                    >
+                      <div className="payment-card-left">
+                        <span className="payment-icon payment-icon-upi">
+                          <Smartphone size={22} />
+                        </span>
+                        <div>
+                          <span className="payment-label">UPI Payment</span>
+                          <span className="payment-sub">GPay, PhonePe, Paytm &amp; more</span>
+                        </div>
+                      </div>
+                      {paymentMethod === 'upi' && <CheckCircle2 size={20} className="payment-check" />}
+                    </button>
+
+                    {/* Pay at Venue */}
                     <button
                       type="button"
                       className={`payment-card ${paymentMethod === 'cod' ? 'selected' : ''}`}
@@ -477,7 +532,7 @@ export const Events = () => {
                 </p>
               )}
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button className="btn btn-ghost" onClick={() => { setBookingEvent(null); setShowCardDetails(false); }}>Cancel</button>
+                <button className="btn btn-ghost" onClick={() => { setBookingEvent(null); }}>Cancel</button>
                 <button
                   className="btn btn-primary"
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
@@ -485,20 +540,32 @@ export const Events = () => {
                   disabled={booking || !isAuthenticated}
                 >
                   {booking ? (
-                    'Booking…'
+                    <><Loader2 size={18} className="spin" /> Processing…</>
                   ) : paymentMethod === 'cod' ? (
                     <><Banknote size={18} /> Confirm Booking · {bookingEvent.ticketPrice === 0 ? 'FREE' : `₹${bookingEvent.ticketPrice * tickets}`}</>
+                  ) : paymentMethod === 'upi' ? (
+                    <><Smartphone size={18} /> Pay ₹{bookingEvent.ticketPrice * tickets} via UPI</>
                   ) : (
-                    <><CreditCard size={18} /> Continue to Pay {bookingEvent.ticketPrice === 0 ? 'FREE' : `₹${bookingEvent.ticketPrice * tickets}`}</>
+                    <><CreditCard size={18} /> Pay ₹{bookingEvent.ticketPrice * tickets} Online</>
                   )}
                 </button>
               </div>
-              </>
-            )}
             </div>
           </div>
         </div>
       )}
     </div>
+
+    {/* Custom UPI Payment Modal for event bookings */}
+    {upiModalOpen && upiBookingId && (
+      <UpiPaymentModal
+        amount={upiAmount}
+        orderId={upiBookingId}
+        type="event"
+        onSuccess={handleUpiBookingSuccess}
+        onCancel={handleUpiBookingCancel}
+      />
+    )}
+    </>
   );
 };

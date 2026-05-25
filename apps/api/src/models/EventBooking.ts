@@ -7,9 +7,11 @@ export interface IEventBooking {
   tickets: number;
   totalAmount: number;
   status: 'confirmed' | 'cancelled';
-  paymentMethod: 'online' | 'cod';
-  paymentStatus: 'pending' | 'completed';
+  paymentMethod: 'online' | 'upi' | 'cod';
+  paymentStatus: 'pending' | 'completed' | 'failed';
   bookingRef: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   createdAt: Date;
 }
 
@@ -22,9 +24,11 @@ const eventBookingSchema = new Schema<EventBookingDocument>(
     tickets: { type: Number, required: true, min: 1, max: 10 },
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ['confirmed', 'cancelled'], default: 'confirmed' },
-    paymentMethod: { type: String, enum: ['online', 'cod'], required: true },
-    paymentStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+    paymentMethod: { type: String, enum: ['online', 'upi', 'cod'], required: true },
+    paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
     bookingRef: { type: String, required: true, unique: true },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
   } as any,
   {
     timestamps: true,

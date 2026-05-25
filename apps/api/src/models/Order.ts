@@ -28,8 +28,8 @@ const orderSchema = new Schema<OrderDocument>(
       default: 'pending',
     },
     payment: {
-      stripeSessionId: String,
-      stripePaymentIntentId: String,
+      razorpayOrderId: { type: String },
+      razorpayPaymentId: { type: String },
       status: {
         type: String,
         enum: ['pending', 'paid', 'failed', 'refunded'],
@@ -37,7 +37,7 @@ const orderSchema = new Schema<OrderDocument>(
       },
       method: {
         type: String,
-        enum: ['card', 'mock', 'cod'],
+        enum: ['card', 'mock', 'cod', 'upi'],
         default: 'card',
       },
     },
