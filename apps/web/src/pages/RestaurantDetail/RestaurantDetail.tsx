@@ -5,6 +5,7 @@ import { restaurantApi } from '../../services/endpoints';
 import { useCartStore } from '../../store/cartStore';
 import type { IRestaurant, IMenuItem } from 'shared-types';
 import toast from 'react-hot-toast';
+import { getMenuItemImage } from '../../assets/foodImages';
 import './RestaurantDetail.css';
 
 export const RestaurantDetail = () => {
@@ -166,9 +167,12 @@ export const RestaurantDetail = () => {
                     </div>
                   </div>
                   <div className="menu-item-action">
-                    {item.image && (
-                      <img src={item.image} alt={item.name} className="menu-item-img" />
-                    )}
+                    <img
+                      src={getMenuItemImage(item.name, item.category, item.image)}
+                      alt={item.name}
+                      className="menu-item-img"
+                      loading="lazy"
+                    />
                     {qty > 0 ? (
                       <div className="quantity-control">
                         <button className="qty-btn" onClick={() => {
