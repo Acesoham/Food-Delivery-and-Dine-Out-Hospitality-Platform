@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   Store, Package, Settings, UtensilsCrossed, Loader2,
-  Plus, Edit2, Trash2, X, ChevronRight, Bike, ToggleLeft, ToggleRight,
-  Calendar, Users, Clock, CheckCircle, XCircle,
+  Plus, Edit2, Trash2, X, ChevronRight, ToggleLeft, ToggleRight,
+  Calendar, Users, Clock, CheckCircle, XCircle, Upload, ImageIcon,
 } from 'lucide-react';
 import api from '../../services/api';
-import { restaurantApi, orderApi } from '../../services/endpoints';
+import { restaurantApi, orderApi, uploadApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../hooks/useSocket';
 import type { IRestaurant, IMenuItem, IOrder } from 'shared-types';
@@ -54,12 +54,18 @@ export const Dashboard = () => {
   const [showRestForm, setShowRestForm] = useState(false);
   const [restForm, setRestForm] = useState<RestaurantForm>(EMPTY_REST);
   const [restSaving, setRestSaving] = useState(false);
+  const [restImageFile, setRestImageFile] = useState<File | null>(null);
+  const [restImagePreview, setRestImagePreview] = useState<string>('');
+  const restImageRef = useRef<HTMLInputElement>(null);
 
   // Add/Edit menu item modal
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<IMenuItem | null>(null);
   const [itemForm, setItemForm] = useState<MenuItemForm>(EMPTY_ITEM);
   const [itemSaving, setItemSaving] = useState(false);
+  const [itemImageFile, setItemImageFile] = useState<File | null>(null);
+  const [itemImagePreview, setItemImagePreview] = useState<string>('');
+  const itemImageRef = useRef<HTMLInputElement>(null);
 
   const isConsumer = user?.role === 'consumer';
   const isCourier = user?.role === 'courier';
@@ -154,11 +160,30 @@ export const Dashboard = () => {
         ],
       };
       const { data } = await restaurantApi.create(payload as any);
-      setRestaurant(data.data);
+      const newRest = data.data;
+
+      // Upload banner image if provided
+      if (restImageFile) {
+        try {
+          await uploadApi.uploadRestaurantImage(newRest._id, restImageFile);
+          // Re-fetch updated restaurant with images
+          const refreshed = await restaurantApi.getById(newRest._id);
+          setRestaurant(refreshed.data.data.restaurant);
+        } catch {
+          // Image upload failed silently – restaurant is still created
+          setRestaurant(newRest);
+          toast('Restaurant created but image upload failed. You can add images from Settings.', { icon: '⚠️' });
+        }
+      } else {
+        setRestaurant(newRest);
+      }
+
       setMenuItems([]);
       setOrders([]);
       setShowRestForm(false);
-      toast.success(`🎉 "${data.data.name}" is live! Now add your menu items.`);
+      setRestImageFile(null);
+      setRestImagePreview('');
+      toast.success(`🎉 "${newRest.name}" is live! Now add your menu items.`);
       setActiveTab('menu');
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to create restaurant');
@@ -184,7 +209,22 @@ export const Dashboard = () => {
           ? restForm.cuisineTypes.split(',').map(s => s.trim())
           : restaurant.cuisineTypes,
       } as any);
-      setRestaurant(data.data);
+
+      // Upload banner image if provided
+      if (restImageFile) {
+        try {
+          await uploadApi.uploadRestaurantImage(restaurant._id, restImageFile);
+          const refreshed = await restaurantApi.getById(restaurant._id);
+          setRestaurant(refreshed.data.data.restaurant);
+          setRestImageFile(null);
+          setRestImagePreview('');
+        } catch {
+          toast('Settings saved but image upload failed.', { icon: '⚠️' });
+        }
+      } else {
+        setRestaurant(data.data);
+      }
+      
       toast.success('Settings saved!');
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to update settings');
@@ -197,6 +237,8 @@ export const Dashboard = () => {
   const openAddItem = () => {
     setEditingItem(null);
     setItemForm(EMPTY_ITEM);
+    setItemImageFile(null);
+    setItemImagePreview('');
     setShowItemModal(true);
   };
 
@@ -210,6 +252,8 @@ export const Dashboard = () => {
       tags: (item.tags || []).join(', '),
       preparationTime: String(item.preparationTime || 15),
     });
+    setItemImageFile(null);
+    setItemImagePreview(item.image || '');
     setShowItemModal(true);
   };
 
@@ -229,15 +273,35 @@ export const Dashboard = () => {
         isAvailable: true,
       };
 
+      let savedItem: IMenuItem;
       if (editingItem) {
         const { data } = await restaurantApi.updateMenuItem(restaurant._id, editingItem._id, payload as any);
-        setMenuItems(prev => prev.map(i => i._id === editingItem._id ? data.data : i));
-        toast.success('Menu item updated!');
+        savedItem = data.data;
       } else {
         const { data } = await restaurantApi.addMenuItem(restaurant._id, payload as any);
-        setMenuItems(prev => [...prev, data.data]);
+        savedItem = data.data;
+      }
+
+      // Upload food image if a new file was chosen
+      if (itemImageFile) {
+        try {
+          const { data: imgData } = await uploadApi.uploadMenuItemImage(restaurant._id, savedItem._id, itemImageFile);
+          savedItem = { ...savedItem, image: imgData.data.imageUrl };
+        } catch {
+          toast('Item saved but image upload failed.', { icon: '⚠️' });
+        }
+      }
+
+      if (editingItem) {
+        setMenuItems(prev => prev.map(i => i._id === editingItem._id ? savedItem : i));
+        toast.success('Menu item updated!');
+      } else {
+        setMenuItems(prev => [...prev, savedItem]);
         toast.success('Menu item added! It\'s now visible to customers.');
       }
+
+      setItemImageFile(null);
+      setItemImagePreview('');
       setShowItemModal(false);
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to save menu item');
@@ -384,6 +448,44 @@ export const Dashboard = () => {
                 <option value="3">₹₹₹ Premium</option>
                 <option value="4">₹₹₹₹ Fine Dining</option>
               </select>
+            </div>
+
+            {/* ── Restaurant Banner Image ── */}
+            <div className="input-group">
+              <label>Restaurant Banner Image (optional)</label>
+              <input
+                ref={restImageRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setRestImageFile(file);
+                    setRestImagePreview(URL.createObjectURL(file));
+                  }
+                }}
+              />
+              {restImagePreview ? (
+                <div style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', height: 160 }}>
+                  <img src={restImagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button
+                    type="button"
+                    onClick={() => { setRestImageFile(null); setRestImagePreview(''); if (restImageRef.current) restImageRef.current.value = ''; }}
+                    style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => restImageRef.current?.click()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--color-muted)', cursor: 'pointer', width: '100%', justifyContent: 'center', fontSize: '0.9rem' }}
+                >
+                  <Upload size={18} /> Click to upload a banner image
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
@@ -606,6 +708,11 @@ export const Dashboard = () => {
                 <div className="menu-grid-admin">
                   {menuItems.map(item => (
                     <div key={item._id} className={`menu-admin-card card ${!item.isAvailable ? 'unavailable' : ''}`}>
+                      {item.image && (
+                        <div style={{ height: 110, overflow: 'hidden', borderRadius: 'var(--radius) var(--radius) 0 0', flexShrink: 0 }}>
+                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      )}
                       <div className="menu-admin-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <h3 style={{ margin: 0 }}>{item.name}</h3>
@@ -676,7 +783,49 @@ export const Dashboard = () => {
                       <option value="4">₹₹₹₹ Fine Dining</option>
                     </select>
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={restSaving}>
+
+                  {/* ── Restaurant Banner Image ── */}
+                  <div className="input-group">
+                    <label>Update Banner Image</label>
+                    <input
+                      ref={restImageRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setRestImageFile(file);
+                          setRestImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                    {restImagePreview || restaurant?.images?.[0] ? (
+                      <div style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', height: 160 }}>
+                        <img src={restImagePreview || restaurant?.images?.[0]} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button
+                          type="button"
+                          onClick={() => { setRestImageFile(null); setRestImagePreview(''); if (restImageRef.current) restImageRef.current.value = ''; }}
+                          style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+                        >
+                          <X size={14} />
+                        </button>
+                        {!restImageFile && restaurant?.images?.[0] && (
+                          <span style={{ position: 'absolute', bottom: 6, left: 8, fontSize: '0.7rem', background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 4, padding: '2px 6px' }}>Current photo</span>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => restImageRef.current?.click()}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--color-muted)', cursor: 'pointer', width: '100%', justifyContent: 'center', fontSize: '0.9rem' }}
+                      >
+                        <Upload size={18} /> Click to upload a new banner image
+                      </button>
+                    )}
+                  </div>
+
+                  <button type="submit" className="btn btn-primary" disabled={restSaving} style={{ marginTop: '1rem' }}>
                     {restSaving ? <Loader2 size={18} className="spin" /> : 'Save Changes'}
                   </button>
                 </form>
@@ -722,6 +871,49 @@ export const Dashboard = () => {
               <div className="input-group">
                 <label>Tags (comma-separated)</label>
                 <input className="input" placeholder="veg, popular, spicy" value={itemForm.tags} onChange={e => setItemForm(f => ({ ...f, tags: e.target.value }))} />
+              </div>
+
+              {/* ── Food Photo Upload ── */}
+              <div className="input-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ImageIcon size={14} /> Food Photo (optional)
+                </label>
+                <input
+                  ref={itemImageRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setItemImageFile(file);
+                      setItemImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+                {itemImagePreview ? (
+                  <div style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', height: 130 }}>
+                    <img src={itemImagePreview} alt="Food preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button
+                      type="button"
+                      onClick={() => { setItemImageFile(null); setItemImagePreview(''); if (itemImageRef.current) itemImageRef.current.value = ''; }}
+                      style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+                    >
+                      <X size={14} />
+                    </button>
+                    {!itemImageFile && editingItem?.image && (
+                      <span style={{ position: 'absolute', bottom: 6, left: 8, fontSize: '0.7rem', background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 4, padding: '2px 6px' }}>Existing photo</span>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => itemImageRef.current?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1rem', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius)', background: 'transparent', color: 'var(--color-muted)', cursor: 'pointer', width: '100%', justifyContent: 'center', fontSize: '0.88rem' }}
+                  >
+                    <Upload size={16} /> Upload food photo
+                  </button>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>

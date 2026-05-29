@@ -14,3 +14,5 @@ export { Event } from './Event';
 export type { EventDocument } from './Event';
 export { EventBooking } from './EventBooking';
 export type { EventBookingDocument } from './EventBooking';
+export { Image } from './Image';
+export type { ImageDocument } from './Image';

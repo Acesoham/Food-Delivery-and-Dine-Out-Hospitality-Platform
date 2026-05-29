@@ -172,3 +172,29 @@ export const paymentApi = {
       { type, refId }
     ),
 };
+
+// ─── Uploads ───
+export const uploadApi = {
+  /** Upload a restaurant banner image (multipart/form-data) */
+  uploadRestaurantImage: (restaurantId: string, file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api.post<{ success: boolean; data: { imageUrl: string; imageId: string } }>(
+      `/uploads/restaurant/${restaurantId}/image`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
+
+  /** Upload a menu-item food photo (multipart/form-data) */
+  uploadMenuItemImage: (restaurantId: string, itemId: string, file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api.post<{ success: boolean; data: { imageUrl: string; imageId: string } }>(
+      `/uploads/restaurant/${restaurantId}/menu/${itemId}/image`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
+};
+
