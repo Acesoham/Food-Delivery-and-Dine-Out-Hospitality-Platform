@@ -34,6 +34,7 @@ export const RestaurantDetail = () => {
   };
 
   const categories = ['All', ...new Set(menuItems.map((i) => i.category))];
+  // Show all items so customers can see which ones are out of stock
   const filteredItems = selectedCategory === 'All'
     ? menuItems
     : menuItems.filter((i) => i.category === selectedCategory);
@@ -130,6 +131,17 @@ export const RestaurantDetail = () => {
           </div>
         </div>
 
+        {/* Closed Banner */}
+        {!restaurant.isActive && (
+          <div className="restaurant-closed-banner">
+            <span className="restaurant-closed-icon">🔴</span>
+            <div>
+              <strong>This restaurant is currently closed</strong>
+              <p>You can still browse the menu, but ordering is unavailable right now.</p>
+            </div>
+          </div>
+        )}
+
         {/* Menu */}
         <div className="menu-section">
           <h2>Menu</h2>
@@ -149,17 +161,21 @@ export const RestaurantDetail = () => {
           <div className="menu-grid">
             {filteredItems.map((item) => {
               const qty = getItemQuantity(item._id);
+              const isOutOfStock = !item.isAvailable;
               return (
-                <div key={item._id} className="menu-item-card">
+                <div key={item._id} className={`menu-item-card ${isOutOfStock ? 'menu-item-out-of-stock' : ''}`}>
                   <div className="menu-item-info">
                     <div className="menu-item-tags">
+                      {isOutOfStock && (
+                        <span className="tag tag-out-of-stock">Out of Stock</span>
+                      )}
                       {item.tags.map((t) => (
                         <span key={t} className={`tag ${t === 'veg' ? 'tag-veg' : t === 'non-veg' ? 'tag-nonveg' : ''}`}>
                           {t}
                         </span>
                       ))}
                     </div>
-                    <h3>{item.name}</h3>
+                    <h3 style={{ color: isOutOfStock ? 'var(--text-muted)' : undefined }}>{item.name}</h3>
                     <p className="menu-item-desc">{item.description}</p>
                     <div className="menu-item-bottom">
                       <span className="menu-item-price">₹{item.price}</span>
@@ -167,8 +183,11 @@ export const RestaurantDetail = () => {
                     </div>
                   </div>
                   <div className="menu-item-action">
-                      
-                    {qty > 0 ? (
+                    {isOutOfStock ? (
+                      <button className="btn btn-sm add-btn" disabled style={{ opacity: 0.45, cursor: 'not-allowed', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                        Unavailable
+                      </button>
+                    ) : qty > 0 ? (
                       <div className="quantity-control">
                         <button className="qty-btn" onClick={() => {
                           const cartStore = useCartStore.getState();

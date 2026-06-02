@@ -64,6 +64,9 @@ export const restaurantApi = {
 
   deleteMenuItem: (restaurantId: string, itemId: string) =>
     api.delete(`/restaurants/${restaurantId}/menu/${itemId}`),
+
+  toggleLiveStatus: (restaurantId: string) =>
+    api.patch<{ success: boolean; data: IRestaurant }>(`/restaurants/${restaurantId}/toggle-live`),
 };
 
 // ─── Orders ───

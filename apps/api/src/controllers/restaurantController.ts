@@ -110,6 +110,22 @@ export const deleteMenuItem = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+export const toggleRestaurantLiveStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const restaurant = await restaurantService.toggleRestaurantLiveStatus(
+      req.params.id as string,
+      req.user!._id.toString()
+    );
+    res.json({ success: true, data: restaurant });
+  } catch (error: any) {
+    if (error.statusCode) {
+      res.status(error.statusCode).json({ success: false, error: error.message });
+      return;
+    }
+    next(error);
+  }
+};
+
 export const toggleMenuItemAvailability = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const item = await restaurantService.toggleMenuItemAvailability(

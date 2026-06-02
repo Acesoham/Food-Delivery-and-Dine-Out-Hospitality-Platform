@@ -165,3 +165,67 @@
 
 @media (max-width: 1024px) { .restaurant-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .restaurant-grid { grid-template-columns: 1fr; } }
+
+/* ── Closed Restaurant Card ── */
+.restaurant-card--closed {
+  opacity: 0.78;
+}
+
+.restaurant-card--closed .restaurant-img img {
+  filter: grayscale(35%);
+}
+
+/* Dark overlay covering the image */
+.restaurant-closed-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(1.5px);
+}
+
+/* Pill inside the overlay */
+.restaurant-closed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 0.813rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* Name row with inline Closed tag */
+.restaurant-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.restaurant-name-row .restaurant-name {
+  margin-bottom: 0;
+}
+
+/* Small "Closed" tag next to the name */
+.restaurant-closed-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

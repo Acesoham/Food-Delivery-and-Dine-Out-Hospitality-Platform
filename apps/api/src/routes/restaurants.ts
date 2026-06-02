@@ -14,6 +14,7 @@ router.get('/:id/menu', ctrl.getMenu);
 // Merchant routes
 router.post('/', authenticate, requireRole('merchant', 'admin'), validate(CreateRestaurantSchema), ctrl.create);
 router.patch('/:id', authenticate, requireRole('merchant', 'admin'), ctrl.update);
+router.patch('/:id/toggle-live', authenticate, requireRole('merchant', 'admin'), ctrl.toggleRestaurantLiveStatus);
 router.get('/merchant/my-restaurants', authenticate, requireRole('merchant', 'admin'), ctrl.getMyRestaurants);
 
 // Menu management (merchant)

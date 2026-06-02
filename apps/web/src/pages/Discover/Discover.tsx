@@ -100,7 +100,11 @@ export const Discover = () => {
         ) : (
           <div className="restaurant-grid">
             {restaurants.map((r) => (
-              <Link to={`/restaurant/${r._id}`} key={r._id} className="restaurant-card card">
+              <Link
+                to={`/restaurant/${r._id}`}
+                key={r._id}
+                className={`restaurant-card card ${!r.isActive ? 'restaurant-card--closed' : ''}`}
+              >
                 <div className="restaurant-img">
                   <img
                     src={r.images?.[0] || `https://picsum.photos/seed/${r._id}/400/250`}
@@ -117,9 +121,22 @@ export const Discover = () => {
                       {'₹'.repeat(r.priceRange)}
                     </span>
                   </div>
+                  {/* Closed overlay */}
+                  {!r.isActive && (
+                    <div className="restaurant-closed-overlay">
+                      <span className="restaurant-closed-pill">
+                        🔴 Closed · Not accepting orders
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="card-body">
-                  <h3 className="restaurant-name">{r.name}</h3>
+                  <div className="restaurant-name-row">
+                    <h3 className="restaurant-name">{r.name}</h3>
+                    {!r.isActive && (
+                      <span className="restaurant-closed-tag">Closed</span>
+                    )}
+                  </div>
                   <p className="restaurant-cuisines">{r.cuisineTypes.join(' • ')}</p>
                   <div className="restaurant-meta">
                     <span className="restaurant-rating">

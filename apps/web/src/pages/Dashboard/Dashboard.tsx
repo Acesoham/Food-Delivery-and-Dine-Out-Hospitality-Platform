@@ -49,6 +49,7 @@ export const Dashboard = () => {
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveToggling, setLiveToggling] = useState(false);
 
   // Create/Edit restaurant
   const [showRestForm, setShowRestForm] = useState(false);
@@ -323,6 +324,21 @@ export const Dashboard = () => {
     }
   };
 
+  /* ── Toggle restaurant live/closed status ── */
+  const handleToggleLive = async () => {
+    if (!restaurant) return;
+    setLiveToggling(true);
+    try {
+      const { data } = await restaurantApi.toggleLiveStatus(restaurant._id);
+      setRestaurant(data.data);
+      toast.success(data.data.isActive ? '🟢 Restaurant is now LIVE!' : '🔴 Restaurant is now CLOSED');
+    } catch {
+      toast.error('Failed to update restaurant status');
+    } finally {
+      setLiveToggling(false);
+    }
+  };
+
   /* ── Toggle item availability ── */
   const toggleItemAvailability = async (item: IMenuItem) => {
     if (!restaurant) return;
@@ -331,6 +347,7 @@ export const Dashboard = () => {
         isAvailable: !item.isAvailable,
       } as any);
       setMenuItems(prev => prev.map(i => i._id === item._id ? data.data : i));
+      toast.success(data.data.isAvailable ? `✅ ${item.name} is now available` : `❌ ${item.name} marked as out of stock`);
     } catch {
       toast.error('Failed to update availability');
     }
@@ -505,12 +522,49 @@ export const Dashboard = () => {
     <div className="dashboard-page page">
       <div className="container">
         <div className="dashboard-header">
-          <div>
-            <h1>{restaurant!.name} <span style={{ fontSize: '0.6em', color: 'var(--color-success)', fontWeight: 500 }}>● Live</span></h1>
-            <p style={{ margin: 0, color: 'var(--color-muted)', fontSize: '0.9rem' }}>
-              {restaurant!.cuisineTypes.join(' · ')} &nbsp;·&nbsp; {restaurant!.address.city}
-            </p>
+          <div className="dashboard-header-top">
+            <div>
+              <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {restaurant!.name}
+                <span
+                  style={{
+                    fontSize: '0.45em',
+                    fontWeight: 700,
+                    padding: '3px 10px',
+                    borderRadius: 999,
+                    background: restaurant!.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                    color: restaurant!.isActive ? '#15803d' : '#b91c1c',
+                    border: `1px solid ${restaurant!.isActive ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {restaurant!.isActive ? '● LIVE' : '● CLOSED'}
+                </span>
+              </h1>
+              <p style={{ margin: 0, color: 'var(--color-muted)', fontSize: '0.9rem' }}>
+                {restaurant!.cuisineTypes.join(' · ')} &nbsp;·&nbsp; {restaurant!.address.city}
+              </p>
+            </div>
+
+            {/* ── Live / Closed Toggle ── */}
+            <button
+              id="restaurant-live-toggle"
+              className={`live-toggle-btn ${restaurant!.isActive ? 'live-toggle-btn--live' : 'live-toggle-btn--closed'}`}
+              onClick={handleToggleLive}
+              disabled={liveToggling}
+              title={restaurant!.isActive ? 'Click to close restaurant' : 'Click to go live'}
+            >
+              {liveToggling ? (
+                <Loader2 size={16} className="spin" />
+              ) : restaurant!.isActive ? (
+                <ToggleRight size={22} />
+              ) : (
+                <ToggleLeft size={22} />
+              )}
+              <span>{restaurant!.isActive ? 'Restaurant is Live' : 'Restaurant is Closed'}</span>
+            </button>
           </div>
+
           <div className="dashboard-tabs">
             <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
               <Package size={18} /> Orders
@@ -714,9 +768,20 @@ export const Dashboard = () => {
                         </div>
                       )}
                       <div className="menu-admin-info">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <h3 style={{ margin: 0 }}>{item.name}</h3>
-                          {!item.isAvailable && <span className="badge" style={{ background: '#ef4444', color: '#fff', fontSize: '0.65rem' }}>Off</span>}
+                          {!item.isAvailable && (
+                            <span style={{
+                              background: 'rgba(239,68,68,0.12)',
+                              color: '#b91c1c',
+                              border: '1px solid rgba(239,68,68,0.3)',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: 999,
+                              letterSpacing: '0.04em',
+                            }}>OUT OF STOCK</span>
+                          )}
                         </div>
                         <p className="text-muted" style={{ margin: '0.25rem 0', fontSize: '0.85rem' }}>{item.category} · ₹{item.price}</p>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-muted)' }}>{item.description}</p>
@@ -728,13 +793,16 @@ export const Dashboard = () => {
                           </div>
                         )}
                       </div>
-                      <div className="menu-admin-actions">
+                      <div className="menu-admin-actions" style={{ alignItems: 'center' }}>
+                        {/* Availability pill-toggle */}
                         <button
-                          className="btn-icon btn-ghost"
-                          title={item.isAvailable ? 'Mark as unavailable' : 'Mark as available'}
+                          id={`toggle-item-${item._id}`}
+                          className={`item-avail-toggle ${item.isAvailable ? 'item-avail-toggle--on' : 'item-avail-toggle--off'}`}
+                          title={item.isAvailable ? 'Mark as out of stock' : 'Mark as available'}
                           onClick={() => toggleItemAvailability(item)}
                         >
-                          {item.isAvailable ? <ToggleRight size={20} color="var(--color-success)" /> : <ToggleLeft size={20} />}
+                          {item.isAvailable ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                          <span>{item.isAvailable ? 'In Stock' : 'Out of Stock'}</span>
                         </button>
                         <button className="btn-icon btn-ghost" title="Edit" onClick={() => openEditItem(item)}><Edit2 size={16} /></button>
                         <button className="btn-icon text-danger" title="Delete" onClick={() => deleteMenuItem(item._id)}><Trash2 size={16} /></button>

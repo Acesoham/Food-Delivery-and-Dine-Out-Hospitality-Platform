@@ -30,7 +30,8 @@ export const discoverRestaurants = async (query: DiscoverQuery) => {
   const skip = (page - 1) * limit;
 
   // Build match filter for inside $geoNear query
-  const matchFilter: Record<string, any> = { isActive: true };
+  // Note: we include closed (isActive: false) restaurants so customers can see them
+  const matchFilter: Record<string, any> = {};
   if (cuisine) matchFilter.cuisineTypes = cuisine;
   if (priceRange) matchFilter.priceRange = priceRange;
   if (minRating) matchFilter['rating.average'] = { $gte: minRating };
@@ -110,7 +111,7 @@ export const discoverRestaurants = async (query: DiscoverQuery) => {
 };
 
 /**
- * Get restaurant by ID with menu items
+ * Get restaurant by ID with menu items (all items including unavailable, for customer view)
  */
 export const getRestaurantById = async (id: string) => {
   const restaurant = await Restaurant.findById(id);
@@ -118,12 +119,23 @@ export const getRestaurantById = async (id: string) => {
     throw Object.assign(new Error('Restaurant not found'), { statusCode: 404 });
   }
 
-  const menuItems = await MenuItem.find({
-    restaurantId: id,
-    isAvailable: true,
-  }).sort({ category: 1, name: 1 });
+  // Return ALL menu items so customers can see out-of-stock items (isAvailable = false)
+  const menuItems = await MenuItem.find({ restaurantId: id }).sort({ category: 1, name: 1 });
 
   return { restaurant, menuItems };
+};
+
+/**
+ * Toggle restaurant live/closed status (owner only)
+ */
+export const toggleRestaurantLiveStatus = async (restaurantId: string, ownerId: string) => {
+  const restaurant = await Restaurant.findOne({ _id: restaurantId, ownerId });
+  if (!restaurant) {
+    throw Object.assign(new Error('Restaurant not found or unauthorized'), { statusCode: 403 });
+  }
+  restaurant.isActive = !restaurant.isActive;
+  await restaurant.save();
+  return restaurant;
 };
 
 /**
