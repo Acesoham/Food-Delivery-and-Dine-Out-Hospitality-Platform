@@ -118,13 +118,13 @@ export const Home = () => {
             <div className="step">
               <div className="step-number">2</div>
               <h3>Order</h3>
-              <p>Add items to your cart and checkout securely with Stripe.</p>
+              <p>Add items to your cart and checkout securely with Razorpay/ COD.</p>
             </div>
             <div className="step-connector" />
             <div className="step">
               <div className="step-number">3</div>
               <h3>Track</h3>
-              <p>Watch your order in real-time as the courier brings it to you.</p>
+              <p>Get your order in real-time with our advanced tracking system.</p>
             </div>
             <div className="step-connector" />
             <div className="step">
