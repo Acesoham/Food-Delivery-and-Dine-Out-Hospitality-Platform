@@ -16,6 +16,8 @@ import type {
   UpdateOrderStatusInput,
   ReviewPrompt,
   PointsBreakdown,
+  LoyaltyInfo,
+  ReviewType,
   PaginatedResponse,
 } from 'shared-types';
 
@@ -116,14 +118,28 @@ export const reviewApi = {
       params: { page },
     }),
 
-  getAiPrompts: (orderId: string) =>
-    api.get<{ success: boolean; data: ReviewPrompt[] }>(`/reviews/ai-prompts/${orderId}`),
+  // entityId = orderId | reservationId | eventBookingId; type defaults to 'order'
+  getAiPrompts: (entityId: string, type: ReviewType = 'order') =>
+    api.get<{ success: boolean; data: { prompts: ReviewPrompt[]; suggestedKeywords: string[] } }>(
+      `/reviews/ai-prompts/${entityId}`,
+      { params: { type } }
+    ),
 
-  previewPoints: (text: string, media?: string[]) =>
+  previewPoints: (text: string, rating?: number, media?: string[]) =>
     api.post<{ success: boolean; data: PointsBreakdown }>('/reviews/preview-points', {
       text,
+      rating,
       media,
     }),
+
+  getMyStatus: (entityId: string, type: ReviewType = 'order') =>
+    api.get<{ success: boolean; data: { reviewed: boolean; review: IReview | null } }>(
+      `/reviews/my-status/${entityId}`,
+      { params: { type } }
+    ),
+
+  getUserPoints: () =>
+    api.get<{ success: boolean; data: LoyaltyInfo }>('/reviews/my-points'),
 };
 
 // ─── Reservations ───

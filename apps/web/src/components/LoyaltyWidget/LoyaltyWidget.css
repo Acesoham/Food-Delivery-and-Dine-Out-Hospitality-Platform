@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════
+   LoyaltyWidget — Review Points Tracker
+   ═══════════════════════════════════════ */
+
+.lw-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.lw-card:hover {
+  border-color: #f97316;
+  box-shadow: 0 4px 16px rgba(249,115,22,0.12);
+  transform: translateY(-1px);
+}
+
+.lw-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  padding: 20px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  cursor: default;
+}
+
+/* ── Header ── */
+.lw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lw-tier-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid;
+  flex: 1;
+}
+
+.lw-tier-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.lw-tier-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.lw-tier-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.lw-points-display {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.lw-pts-big {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lw-pts-unit {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* ── Progress ── */
+.lw-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lw-progress-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.lw-progress-track {
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lw-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ── Redeem Hint ── */
+.lw-redeem-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.lw-redeem-hint svg {
+  color: #f97316;
+  flex-shrink: 0;
+}
+
+/* ── Recent Awards ── */
+.lw-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.lw-recent-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.lw-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+}
+
+.lw-recent-icon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.lw-recent-reason {
+  flex: 1;
+  color: #475569;
+  text-transform: capitalize;
+}
+
+.lw-recent-pts {
+  font-weight: 700;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.lw-recent-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.lw-expand-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ── Spin ── */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

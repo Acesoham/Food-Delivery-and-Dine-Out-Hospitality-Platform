@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ChevronRight, Loader2, Bike } from 'lucide-react';
+import { Package, ChevronRight, Loader2, Bike, Star } from 'lucide-react';
 import { orderApi } from '../../services/endpoints';
 import { useSocket } from '../../hooks/useSocket';
 import { GoogleMap, type MapPoint } from '../../components/GoogleMap/GoogleMap';
+import { ReviewModal, type ReviewTarget } from '../../components/ReviewModal/ReviewModal';
 import type { IOrder } from 'shared-types';
 import toast from 'react-hot-toast';
 import './Orders.css';
@@ -21,8 +22,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 /* Extended order type — omits string-typed ref fields, redefines as populated objects */
 interface ExtOrder extends Omit<IOrder, 'courierId' | 'restaurantId'> {
-  courierId?: { profile?: { firstName: string; lastName: string } } | null;
-  restaurantId?: { name?: string; address?: any; location?: GeoPoint } | null;
+  courierId?: { _id?: string; profile?: { firstName: string; lastName: string } } | null;
+  restaurantId?: { _id?: string; name?: string; address?: any; location?: GeoPoint } | null;
   _courierName?: string;
 }
 
@@ -44,6 +45,9 @@ export const Orders = () => {
   const [orders, setOrders] = useState<ExtOrder[]>([]);
   const [courierLocations, setCourierLocations] = useState<CourierLocationMap>({});
   const [loading, setLoading] = useState(true);
+  const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
+  // Track which orders have been reviewed this session
+  const [reviewedOrders, setReviewedOrders] = useState<Set<string>>(new Set());
   const { joinOrderRoom, leaveOrderRoom, onOrderStatusUpdate, onCourierLocationUpdate } = useSocket();
 
   /* ── Fetch orders ── */
@@ -163,6 +167,11 @@ export const Orders = () => {
               const routePath = compactPoints([restaurantPoint, courierPoint, deliveryPoint]);
               const showTrackingMap = order.type === 'delivery' && trackingMarkers.length > 0;
 
+              // Review CTA conditions
+              const isDelivered = order.status === 'delivered';
+              const alreadyReviewed = reviewedOrders.has(order._id);
+              const hasCourier = !!order.courierId;
+
               return (
                 <div key={order._id} className={`order-card-wrapper ${showTrackingMap ? 'has-map' : ''}`}>
                   {showCourierBanner && (
@@ -202,6 +211,47 @@ export const Orders = () => {
                       </div>
                     </div>
                   </Link>
+
+                  {/* ── Review CTAs for delivered orders ── */}
+                  {isDelivered && !alreadyReviewed && (
+                    <div className="order-review-ctas">
+                      <button
+                        className="order-review-btn"
+                        id={`review-order-${order._id}`}
+                        onClick={() => setReviewTarget({
+                          reviewType: 'order',
+                          entityId: order._id,
+                          entityName: (order.restaurantId as any)?.name || 'Restaurant',
+                          restaurantId: (order.restaurantId as any)?._id || (order.restaurantId as any),
+                        })}
+                      >
+                        <Star size={14} fill="currentColor" />
+                        Review Restaurant · Earn up to 90 pts
+                      </button>
+
+                      {hasCourier && (
+                        <button
+                          className="order-review-btn order-review-btn--courier"
+                          id={`review-courier-${order._id}`}
+                          onClick={() => setReviewTarget({
+                            reviewType: 'delivery_person',
+                            entityId: order._id,
+                            entityName: courierName ? `Delivery by ${courierName}` : 'Delivery Partner',
+                          })}
+                        >
+                          <Bike size={14} />
+                          Rate Delivery Partner
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {isDelivered && alreadyReviewed && (
+                    <div className="order-reviewed-badge">
+                      ✅ Reviewed — Points Added!
+                    </div>
+                  )}
+
                   {showTrackingMap && (
                     <div className="order-map-panel">
                       <div className="order-map-header">
@@ -226,6 +276,22 @@ export const Orders = () => {
           </div>
         )}
       </div>
+
+      {/* ── Review Modal ── */}
+      {reviewTarget && (
+        <ReviewModal
+          target={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onSuccess={(pts) => {
+            toast.success(`🎉 Review submitted! You earned ${pts} loyalty points!`, { duration: 5000 });
+            // Mark as reviewed in session
+            if (reviewTarget.reviewType === 'order' || reviewTarget.reviewType === 'delivery_person') {
+              setReviewedOrders((prev) => new Set([...prev, reviewTarget.entityId]));
+            }
+            setReviewTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 };

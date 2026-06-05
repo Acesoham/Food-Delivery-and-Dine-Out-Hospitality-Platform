@@ -2,7 +2,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, LogOut, ChefHat, MapPin, Bike, CalendarHeart } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
+import { useEffect, useRef, useState } from 'react';
 import './Navbar.css';
+
+const TIER_CONFIG: Record<string, { emoji: string; color: string; glow: string }> = {
+  Bronze:   { emoji: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.35)' },
+  Silver:   { emoji: '🥈', color: '#94a3b8', glow: 'rgba(148,163,184,0.35)' },
+  Gold:     { emoji: '🥇', color: '#f59e0b', glow: 'rgba(245,158,11,0.4)'  },
+  Platinum: { emoji: '💎', color: '#8b5cf6', glow: 'rgba(139,92,246,0.4)'  },
+};
+
+const getTier = (pts: number) =>
+  pts >= 1500 ? 'Platinum' : pts >= 500 ? 'Gold' : pts >= 100 ? 'Silver' : 'Bronze';
 
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -99,9 +110,7 @@ export const Navbar = () => {
                 <span>{user?.profile.firstName}</span>
               </Link>
               {isConsumer && user && (
-                <span className="loyalty-points" title="Loyalty Points">
-                  ⭐ {user.loyaltyPoints}
-                </span>
+                <LoyaltyPill points={user.loyaltyPoints ?? 0} />
               )}
               <button onClick={handleLogout} className="btn-ghost btn-icon" title="Logout">
                 <LogOut size={18} />
@@ -116,5 +125,36 @@ export const Navbar = () => {
         </div>
       </div>
     </nav>
+  );
+};
+
+/* ── LoyaltyPill — animated tier + points badge ──────────────────── */
+const LoyaltyPill = ({ points }: { points: number }) => {
+  const tier = getTier(points);
+  const { emoji, color, glow } = TIER_CONFIG[tier];
+  const [pop, setPop] = useState(false);
+  const prevRef = useRef(points);
+
+  // Trigger pop animation whenever points increase
+  useEffect(() => {
+    if (points !== prevRef.current) {
+      setPop(true);
+      const t = setTimeout(() => setPop(false), 600);
+      prevRef.current = points;
+      return () => clearTimeout(t);
+    }
+  }, [points]);
+
+  return (
+    <Link
+      to="/dashboard"
+      className={`lp-pill ${pop ? 'lp-pill--pop' : ''}`}
+      style={{ '--lp-color': color, '--lp-glow': glow } as React.CSSProperties}
+      title={`${tier} Member — ${points} loyalty points`}
+    >
+      <span className="lp-emoji">{emoji}</span>
+      <span className="lp-pts">{points.toLocaleString()}</span>
+      <span className="lp-label">pts</span>
+    </Link>
   );
 };

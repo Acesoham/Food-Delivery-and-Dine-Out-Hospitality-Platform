@@ -4,14 +4,17 @@ import {
   Store, Package, Settings, UtensilsCrossed, Loader2,
   Plus, Edit2, Trash2, X, ChevronRight, ToggleLeft, ToggleRight,
   Calendar, Users, Clock, CheckCircle, XCircle, Upload, ImageIcon,
+  Star, Gift,
 } from 'lucide-react';
 import api from '../../services/api';
 import { restaurantApi, orderApi, uploadApi } from '../../services/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../hooks/useSocket';
+import { LoyaltyWidget } from '../../components/LoyaltyWidget/LoyaltyWidget';
 import type { IRestaurant, IMenuItem, IOrder } from 'shared-types';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
+
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type MenuItemForm = {
@@ -379,11 +382,101 @@ export const Dashboard = () => {
   /* ══ CONSUMER DASHBOARD ══════════════════════════════════════ */
   if (isConsumer) {
     return (
-      <div className="page container">
-        <div className="empty-dashboard">
-          <Store size={48} />
-          <h2>Your Account Dashboard</h2>
-          <p>View your order history in <a href="/orders">Orders</a> or browse restaurants in <a href="/discover">Discover</a>.</p>
+      <div className="page container" style={{ maxWidth: 720 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>
+            👋 Welcome back{user?.profile?.firstName ? `, ${user.profile.firstName}` : ''}!
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            Track your orders, earn review points, and unlock rewards.
+          </p>
+        </div>
+
+        {/* Loyalty Widget */}
+        <div style={{ marginBottom: 24 }}>
+          <LoyaltyWidget />
+        </div>
+
+        {/* How to earn points */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          borderRadius: 16,
+          padding: '20px 22px',
+          marginBottom: 24,
+          color: '#fff',
+        }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Star size={16} fill="#fbbf24" color="#fbbf24" /> How to Earn Review Points
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+            {[
+              { label: 'Base review', pts: '+10 pts', desc: 'Any valid review' },
+              { label: 'Detailed review', pts: '+5 pts', desc: '20+ words' },
+              { label: 'Long review', pts: '+30 pts', desc: '100+ words' },
+              { label: 'Good keywords', pts: '+20 pts', desc: 'Descriptive words' },
+              { label: 'Add photos', pts: '+15 pts', desc: 'Visual evidence' },
+              { label: 'Positive tone', pts: '+5 pts', desc: 'Positive sentiment' },
+              { label: '5-star review', pts: '+5 pts', desc: 'Top rating' },
+            ].map((item) => (
+              <div key={item.label} style={{
+                background: 'rgba(255,255,255,0.06)',
+                borderRadius: 10,
+                padding: '10px 14px',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f97316' }}>{item.pts}</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff', marginTop: 2 }}>{item.label}</div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: 1 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: 12, marginBottom: 0 }}>
+            Maximum 90 pts per review. Points added instantly to your account.
+          </p>
+        </div>
+
+        {/* Quick Links */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/orders', icon: <Package size={20} />, label: 'My Orders', desc: 'Review delivered orders', color: '#f97316' },
+            { href: '/discover', icon: <Store size={20} />, label: 'Discover Restaurants', desc: 'Find new places to try', color: '#10b981' },
+            { href: '/dine-out', icon: <Calendar size={20} />, label: 'Table Bookings', desc: 'Your reservations', color: '#6366f1' },
+            { href: '/events', icon: <Gift size={20} />, label: 'Events', desc: 'Past event bookings', color: '#ec4899' },
+          ].map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                padding: '16px',
+                borderRadius: 14,
+                border: '1.5px solid var(--border)',
+                background: '#fff',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'all 0.18s',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = link.color;
+                (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${link.color}22`;
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '';
+                (e.currentTarget as HTMLElement).style.transform = '';
+              }}
+            >
+              <div style={{ color: link.color, flexShrink: 0, marginTop: 2 }}>{link.icon}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>{link.label}</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2 }}>{link.desc}</div>
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     );

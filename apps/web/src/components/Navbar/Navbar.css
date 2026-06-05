@@ -150,12 +150,60 @@
   color: var(--primary);
 }
 
-.loyalty-points {
-  font-size: 0.813rem;
-  font-weight: 600;
-  color: var(--warning);
+.lp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  border: 1.5px solid var(--lp-color, #f59e0b);
+  background: color-mix(in srgb, var(--lp-color, #f59e0b) 10%, white);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 0 0 var(--lp-glow, rgba(245,158,11,0.4));
   white-space: nowrap;
 }
+
+.lp-pill:hover {
+  background: color-mix(in srgb, var(--lp-color, #f59e0b) 18%, white);
+  box-shadow: 0 0 0 4px var(--lp-glow, rgba(245,158,11,0.25));
+  transform: translateY(-1px);
+}
+
+.lp-emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.lp-pts {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--lp-color, #f59e0b);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lp-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--lp-color, #f59e0b);
+  opacity: 0.75;
+  line-height: 1;
+}
+
+/* Pop animation — fires when points update */
+.lp-pill--pop {
+  animation: lpPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lpPop {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 var(--lp-glow); }
+  30%  { transform: scale(1.18); box-shadow: 0 0 0 8px var(--lp-glow); }
+  70%  { transform: scale(0.96); box-shadow: 0 0 0 3px var(--lp-glow); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+
 
 .auth-btns {
   display: flex;

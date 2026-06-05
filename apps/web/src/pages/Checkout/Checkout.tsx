@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
 import { orderApi, paymentApi } from '../../services/endpoints';
 import toast from 'react-hot-toast';
-import { Loader2, ArrowLeft, CreditCard, Banknote, CheckCircle2, Smartphone } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, Banknote, CheckCircle2, Smartphone, Star } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModal';
 import './Checkout.css';
@@ -12,7 +12,7 @@ type PaymentMethod = 'card' | 'cod' | 'upi';
 
 export const Checkout = () => {
   const { items, restaurantId, getSubtotal, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, updateLoyaltyPoints } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const navigate = useNavigate();
@@ -20,6 +20,10 @@ export const Checkout = () => {
   // UPI modal state
   const [upiModalOpen, setUpiModalOpen] = useState(false);
   const [upiOrderId, setUpiOrderId] = useState<string | null>(null);
+
+  // Points redemption
+  const availablePoints = user?.loyaltyPoints ?? 0;
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
 
   const [address, setAddress] = useState({
     street: '',
@@ -31,7 +35,11 @@ export const Checkout = () => {
   const subtotal = getSubtotal();
   const deliveryFee = items.length > 0 ? 49 : 0;
   const tax = Math.round(subtotal * 0.05 * 100) / 100;
-  const total = subtotal + deliveryFee + tax;
+  const rawTotal = subtotal + deliveryFee + tax;
+  // 1 point = ₹1 discount, capped at floor(rawTotal)
+  const maxRedeemable = Math.min(availablePoints, Math.floor(rawTotal));
+  const pointsDiscount = Math.min(pointsToRedeem, maxRedeemable);
+  const total = Math.max(0, Math.round((rawTotal - pointsDiscount) * 100) / 100);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +69,7 @@ export const Checkout = () => {
         items: orderItems as any,
         deliveryAddress,
         paymentMethod,
+        pointsRedeemed: pointsToRedeem > 0 ? pointsToRedeem : undefined,
       } as any);
 
       const orderId = orderRes.data.data._id as string;
@@ -80,6 +89,11 @@ export const Checkout = () => {
         paymentMethod === 'cod'
           ? `Order placed! Pay ₹${total.toFixed(2)} on delivery 💵`
           : 'Order placed successfully! 🎉';
+
+      // Sync points balance in the frontend store
+      if (pointsToRedeem > 0) {
+        updateLoyaltyPoints(Math.max(0, availablePoints - pointsDiscount));
+      }
 
       toast.success(successMsg);
       clearCart();
@@ -151,6 +165,90 @@ export const Checkout = () => {
                 <input type="text" className="input" required placeholder="Maharashtra"
                   value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
               </div>
+
+              {/* ── Loyalty Points ── */}
+              {availablePoints > 0 && (
+                <div className="points-section">
+                  <div className="points-header">
+                    <span className="points-title">
+                      <Star size={16} className="points-star" />
+                      Loyalty Points
+                    </span>
+                    <span className="points-balance">
+                      {availablePoints} pts available
+                    </span>
+                  </div>
+
+                  <div className="points-body">
+                    <div className="points-slider-row">
+                      <input
+                        id="points-slider"
+                        type="range"
+                        min={0}
+                        max={maxRedeemable}
+                        step={1}
+                        value={pointsToRedeem}
+                        onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                        className="points-slider"
+                      />
+                      <input
+                        id="points-input"
+                        type="number"
+                        min={0}
+                        max={maxRedeemable}
+                        value={pointsToRedeem}
+                        onChange={(e) => {
+                          const v = Math.min(maxRedeemable, Math.max(0, Number(e.target.value)));
+                          setPointsToRedeem(v);
+                        }}
+                        className="points-number-input"
+                      />
+                    </div>
+
+                    <div className="points-meta">
+                      {pointsToRedeem === 0 ? (
+                        <span className="points-hint">Slide or type to redeem points (1 pt = ₹1 off)</span>
+                      ) : (
+                        <span className="points-saving">
+                          🏆 You save ₹{pointsDiscount.toFixed(2)} using {pointsToRedeem} points!
+                        </span>
+                      )}
+                      {pointsToRedeem > 0 && (
+                        <button
+                          type="button"
+                          className="points-clear"
+                          onClick={() => setPointsToRedeem(0)}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="points-quick-btns">
+                      {[25, 50, 75, 100].map((pct) => {
+                        const v = Math.floor(maxRedeemable * pct / 100);
+                        return v > 0 ? (
+                          <button
+                            key={pct}
+                            type="button"
+                            className={`points-quick ${pointsToRedeem === v ? 'active' : ''}`}
+                            onClick={() => setPointsToRedeem(v)}
+                          >
+                            {pct}%
+                          </button>
+                        ) : null;
+                      })}
+                      <button
+                        type="button"
+                        className={`points-quick ${pointsToRedeem === maxRedeemable ? 'active' : ''}`}
+                        onClick={() => setPointsToRedeem(maxRedeemable)}
+                      >
+                        Max
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* ── Payment Method ── */}
               <div className="payment-section">
@@ -242,6 +340,12 @@ export const Checkout = () => {
               <div className="summary-row"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
               <div className="summary-row"><span>Delivery Fee</span><span>₹{deliveryFee}</span></div>
               <div className="summary-row"><span>Tax (5% GST)</span><span>₹{tax.toFixed(2)}</span></div>
+              {pointsDiscount > 0 && (
+                <div className="summary-row summary-points-discount">
+                  <span>🏆 Points Discount</span>
+                  <span>−₹{pointsDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="summary-divider" />
               <div className="summary-row summary-total"><span>Total</span><span>₹{total.toFixed(2)}</span></div>
               <div className="summary-payment-badge">

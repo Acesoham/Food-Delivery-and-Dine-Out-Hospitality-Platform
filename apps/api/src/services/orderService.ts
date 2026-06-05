@@ -1,6 +1,4 @@
-import { Order } from '../models';
-import { MenuItem } from '../models';
-import { Restaurant } from '../models';
+import { Order, MenuItem, Restaurant, User } from '../models';
 import type { CreateOrderInput, UpdateOrderStatusInput } from 'shared-types';
 import { ORDER_STATUS_TRANSITIONS } from 'shared-types';
 
@@ -52,7 +50,31 @@ export const createOrder = async (consumerId: string, input: CreateOrderInput) =
 
   const deliveryFee = input.type === 'delivery' ? 49 : 0; // ₹49 delivery fee
   const tax = Math.round(subtotal * 0.05 * 100) / 100; // 5% GST
-  const total = Math.round((subtotal + deliveryFee + tax) * 100) / 100;
+  const rawTotal = subtotal + deliveryFee + tax;
+
+  // Points redemption logic
+  let pointsRedeemed = 0;
+  let pointsDiscount = 0;
+
+  if (input.pointsRedeemed && input.pointsRedeemed > 0) {
+    const user = await User.findById(consumerId);
+    if (!user) {
+      throw Object.assign(new Error('User not found'), { statusCode: 404 });
+    }
+    const availablePoints = user.loyaltyPoints || 0;
+    if (input.pointsRedeemed > availablePoints) {
+      throw Object.assign(new Error('Insufficient loyalty points'), { statusCode: 400 });
+    }
+
+    // Rate: 1 point = ₹1 discount, capped at raw total
+    pointsRedeemed = Math.min(input.pointsRedeemed, Math.floor(rawTotal));
+    pointsDiscount = pointsRedeemed;
+
+    // Deduct redeemed points from user's account
+    await User.findByIdAndUpdate(consumerId, { $inc: { loyaltyPoints: -pointsRedeemed } });
+  }
+
+  const total = Math.max(0, Math.round((rawTotal - pointsDiscount) * 100) / 100);
 
   const order = await Order.create({
     orderNumber: generateOrderNumber(),
@@ -63,6 +85,8 @@ export const createOrder = async (consumerId: string, input: CreateOrderInput) =
     subtotal,
     deliveryFee,
     tax,
+    pointsRedeemed,
+    pointsDiscount,
     total,
     status: 'pending',
     payment: {

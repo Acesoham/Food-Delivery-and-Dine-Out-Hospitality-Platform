@@ -21,6 +21,8 @@ const orderSchema = new Schema<OrderDocument>(
     subtotal: { type: Number, required: true },
     deliveryFee: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
+    pointsRedeemed: { type: Number, default: 0 },
+    pointsDiscount: { type: Number, default: 0 },
     total: { type: Number, required: true },
     status: {
       type: String,

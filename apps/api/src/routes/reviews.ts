@@ -6,9 +6,24 @@ import { CreateReviewSchema } from 'shared-types';
 
 const router: Router = Router();
 
+// Submit a review (order / reservation / event / delivery_person)
 router.post('/', authenticate, validate(CreateReviewSchema), ctrl.submitReview);
+
+// Get public reviews for a restaurant
 router.get('/restaurant/:id', ctrl.getRestaurantReviews);
-router.get('/ai-prompts/:orderId', authenticate, ctrl.getAiPrompts);
+
+// AI-powered prompts + keyword suggestions for any entity type
+// GET /reviews/ai-prompts/:entityId?type=order|reservation|event|delivery_person
+router.get('/ai-prompts/:entityId', authenticate, ctrl.getAiPrompts);
+
+// Live points preview while user types
 router.post('/preview-points', authenticate, ctrl.previewPoints);
+
+// Check if user has already reviewed an entity
+// GET /reviews/my-status/:entityId?type=order|reservation|event|delivery_person
+router.get('/my-status/:entityId', authenticate, ctrl.getMyReviewStatus);
+
+// Get current user's loyalty points + tier info
+router.get('/my-points', authenticate, ctrl.getUserPoints);
 
 export default router;

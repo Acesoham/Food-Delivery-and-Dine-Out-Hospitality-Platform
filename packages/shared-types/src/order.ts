@@ -55,6 +55,7 @@ export const CreateOrderSchema = z.object({
       partySize: z.number().min(1).max(20),
     })
     .optional(),
+  pointsRedeemed: z.number().int().min(0).optional(),
 });
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
 
@@ -83,6 +84,8 @@ export interface IOrder {
   deliveryFee: number;
   tax: number;
   total: number;
+  pointsRedeemed?: number;
+  pointsDiscount?: number;
   status: OrderStatus;
   payment: {
     stripeSessionId?: string;

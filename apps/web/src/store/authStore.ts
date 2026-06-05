@@ -11,6 +11,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   setUser: (user: IUser) => void;
+  updateLoyaltyPoints: (newTotal: number) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -54,4 +55,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setUser: (user) => set({ user }),
+
+  updateLoyaltyPoints: (newTotal) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, loyaltyPoints: newTotal } : null,
+    })),
 }));
