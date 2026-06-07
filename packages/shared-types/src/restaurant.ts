@@ -62,6 +62,8 @@ export interface IRestaurant {
   deliveryRadius: number;
   isActive: boolean;
   distanceInKm?: number; // added by $geoNear
+  upiId?: string;
+  upiQrUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

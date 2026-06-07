@@ -62,6 +62,13 @@ export const Dashboard = () => {
   const [restImagePreview, setRestImagePreview] = useState<string>('');
   const restImageRef = useRef<HTMLInputElement>(null);
 
+  // UPI payment settings
+  const [upiId, setUpiId] = useState<string>('');
+  const [upiQrFile, setUpiQrFile] = useState<File | null>(null);
+  const [upiQrPreview, setUpiQrPreview] = useState<string>('');
+  const [upiSaving, setUpiSaving] = useState(false);
+  const upiQrRef = useRef<HTMLInputElement>(null);
+
   // Add/Edit menu item modal
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<IMenuItem | null>(null);
@@ -684,6 +691,10 @@ export const Dashboard = () => {
                 cuisineTypes: restaurant!.cuisineTypes.join(', '),
                 priceRange: String(restaurant!.priceRange),
               });
+              // Initialise UPI fields from stored restaurant data
+              setUpiId((restaurant as any).upiId || '');
+              setUpiQrPreview((restaurant as any).upiQrUrl || '');
+              setUpiQrFile(null);
               setActiveTab('settings');
             }}>
               <Settings size={18} /> Settings
@@ -990,6 +1001,151 @@ export const Dashboard = () => {
                     {restSaving ? <Loader2 size={18} className="spin" /> : 'Save Changes'}
                   </button>
                 </form>
+
+                {/* ── UPI Payment Settings ── */}
+                <div style={{
+                  marginTop: '2rem',
+                  borderTop: '1.5px solid var(--border)',
+                  paddingTop: '1.75rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <span style={{
+                      fontSize: '1.05rem', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                      📱 UPI Payment Settings
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 20 }}>
+                    Add your UPI ID and QR code so customers can pay directly to your account during checkout.
+                  </p>
+
+                  {/* UPI ID input */}
+                  <div className="input-group">
+                    <label>UPI ID (VPA)</label>
+                    <input
+                      id="upi-id-input"
+                      type="text"
+                      className="input"
+                      placeholder="yourname@upi  or  yourname@ybl"
+                      value={upiId}
+                      onChange={e => setUpiId(e.target.value)}
+                    />
+                    <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
+                      e.g. merchant@upi · restaurant@ybl · shop@okaxis
+                    </span>
+                  </div>
+
+                  {/* QR image upload */}
+                  <div className="input-group" style={{ marginTop: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Upload size={14} /> UPI QR Code Image (optional)
+                    </label>
+                    <input
+                      ref={upiQrRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setUpiQrFile(file);
+                          setUpiQrPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                    {upiQrPreview ? (
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <img
+                          src={upiQrPreview}
+                          alt="UPI QR"
+                          style={{
+                            width: 160, height: 160, objectFit: 'cover',
+                            borderRadius: 12, border: '2px solid var(--border)',
+                            display: 'block',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUpiQrFile(null);
+                            setUpiQrPreview('');
+                            if (upiQrRef.current) upiQrRef.current.value = '';
+                          }}
+                          style={{
+                            position: 'absolute', top: 6, right: 6,
+                            background: 'rgba(0,0,0,0.65)', border: 'none',
+                            borderRadius: '50%', width: 26, height: 26,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', color: '#fff',
+                          }}
+                        >
+                          <X size={13} />
+                        </button>
+                        <span style={{
+                          display: 'block', fontSize: '0.72rem',
+                          color: 'var(--text-muted)', marginTop: 6,
+                        }}>
+                          {upiQrFile ? 'New QR selected' : 'Current QR code'}
+                        </span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => upiQrRef.current?.click()}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '0.75rem 1rem',
+                          border: '2px dashed var(--border)',
+                          borderRadius: 'var(--radius)',
+                          background: 'transparent',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer', width: '100%',
+                          justifyContent: 'center', fontSize: '0.88rem',
+                        }}
+                      >
+                        <Upload size={16} /> Upload your QR code image
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Save UPI button */}
+                  <button
+                    id="save-upi-btn"
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={upiSaving}
+                    style={{ marginTop: '1.25rem' }}
+                    onClick={async () => {
+                      if (!restaurant) return;
+                      setUpiSaving(true);
+                      try {
+                        // Save UPI ID text via existing PATCH route
+                        await restaurantApi.update(restaurant._id, { upiId } as any);
+
+                        // Upload QR image if a new file was selected
+                        if (upiQrFile) {
+                          const { data } = await uploadApi.uploadRestaurantUpiQr(restaurant._id, upiQrFile);
+                          setUpiQrPreview(data.data.imageUrl);
+                          setUpiQrFile(null);
+                          if (upiQrRef.current) upiQrRef.current.value = '';
+                        }
+
+                        // Refresh local restaurant object so UPI fields are up-to-date
+                        const refreshed = await restaurantApi.getById(restaurant._id);
+                        setRestaurant(refreshed.data.data.restaurant);
+
+                        toast.success('💳 UPI settings saved!');
+                      } catch (err: any) {
+                        toast.error(err.response?.data?.error || 'Failed to save UPI settings');
+                      } finally {
+                        setUpiSaving(false);
+                      }
+                    }}
+                  >
+                    {upiSaving ? <Loader2 size={18} className="spin" /> : '💳 Save UPI Settings'}
+                  </button>
+                </div>
               </div>
             </div>
           )}

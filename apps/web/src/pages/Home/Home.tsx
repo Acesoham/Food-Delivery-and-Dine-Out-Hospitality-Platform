@@ -1,51 +1,123 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock, Shield, ArrowRight, Utensils, Truck, Calendar } from 'lucide-react';
+import { MapPin, Star, Clock, Shield, ArrowRight, Utensils, Truck, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import './Home.css';
 
+const heroSlides = [
+  {
+    id: 1,
+    image: '/hero_slide_1.png',
+    tag: '🔥 #1 Food Delivery Platform',
+    headline: 'Discover, Order &',
+    highlight: 'Dine',
+    rest: '— All in One Place',
+    subtitle: 'From your favourite local restaurants to exclusive dining experiences. Order delivery, reserve tables, and discover events near you.',
+  },
+  {
+    id: 2,
+    image: '/hero_slide_2.png',
+    tag: '🍕 Over 500 Restaurants',
+    headline: 'Authentic Flavours,',
+    highlight: 'Delivered',
+    rest: 'To Your Door',
+    subtitle: 'Craving something special? Browse hundreds of cuisines and get hot, fresh meals delivered in under 30 minutes.',
+  },
+  {
+    id: 3,
+    image: '/hero_slide_3.png',
+    tag: '⭐ 4.8 Average Rating',
+    headline: 'Reserve, Relax &',
+    highlight: 'Enjoy',
+    rest: 'The Perfect Dining',
+    subtitle: 'Book a table at top-rated restaurants instantly. No phone calls, no waiting — just seamless, memorable dining.',
+  },
+];
+
 export const Home = () => {
+  const [current, setCurrent] = useState(0);
+  const [animating, setAnimating] = useState(false);
+
+  const goTo = (index: number) => {
+    if (animating) return;
+    setAnimating(true);
+    setCurrent(index);
+    setTimeout(() => setAnimating(false), 700);
+  };
+
+  const prev = () => goTo((current - 1 + heroSlides.length) % heroSlides.length);
+  const next = () => goTo((current + 1) % heroSlides.length);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goTo((current + 1) % heroSlides.length);
+    }, 3000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+
+  const slide = heroSlides[current];
+
   return (
     <div className="home">
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="container hero-content">
-          <div className="hero-text">
-            <div className="hero-badge">
-              <span>🔥</span> #1 Food Delivery Platform
+      {/* Hero Slider Section */}
+      <section className="hero-slider">
+        {/* Background slides */}
+        {heroSlides.map((s, i) => (
+          <div
+            key={s.id}
+            className={`slide-bg ${i === current ? 'slide-bg--active' : ''}`}
+            style={{ backgroundImage: `url(${s.image})` }}
+          />
+        ))}
+
+        {/* Dark overlay */}
+        <div className="slide-overlay" />
+
+        {/* Content */}
+        <div className={`container hero-slider-content ${animating ? 'hero-slider-content--fade' : ''}`}>
+          <div className="hero-text-wrap">
+            <div className="hero-badge hero-badge--light">
+              <span>{slide.tag}</span>
             </div>
-            <h1>
-              Discover, Order & <span className="gradient-text">Dine</span> — All in One Place
+
+            <h1 className="hero-heading">
+              {slide.headline}{' '}
+              <span className="gradient-text">{slide.highlight}</span>{' '}
+              {slide.rest}
             </h1>
-            <p className="hero-subtitle">
-              From your favorite local restaurants to exclusive dining experiences.
-              Order delivery, reserve tables, and discover events near you.
-            </p>
+
+            <p className="hero-subtitle">{slide.subtitle}</p>
+
             <div className="hero-actions">
               <Link to="/discover" className="btn btn-primary btn-lg">
                 <MapPin size={20} />
                 Explore Near Me
                 <ArrowRight size={18} />
               </Link>
-              <Link to="/register" className="btn btn-outline btn-lg">
+              <Link to="/register" className="btn btn-outline-light btn-lg">
                 Join Free
               </Link>
             </div>
+
             <div className="hero-stats">
-              <div className="stat">
+              <div className="stat stat--light">
                 <strong>500+</strong>
                 <span>Restaurants</span>
               </div>
-              <div className="stat-divider" />
-              <div className="stat">
+              <div className="stat-divider stat-divider--light" />
+              <div className="stat stat--light">
                 <strong>50K+</strong>
                 <span>Happy Users</span>
               </div>
-              <div className="stat-divider" />
-              <div className="stat">
+              <div className="stat-divider stat-divider--light" />
+              <div className="stat stat--light">
                 <strong>4.8</strong>
                 <span>Avg Rating</span>
               </div>
             </div>
           </div>
+
+          {/* Floating restaurant cards */}
           <div className="hero-visual">
             <div className="hero-card card-1">
               <span className="hero-card-emoji">🍕</span>
@@ -63,6 +135,31 @@ export const Home = () => {
               <span className="hero-card-rating">⭐ 4.9</span>
             </div>
           </div>
+        </div>
+
+        {/* Slider Controls */}
+        <button className="slider-arrow slider-arrow--left" onClick={prev} aria-label="Previous slide">
+          <ChevronLeft size={24} />
+        </button>
+        <button className="slider-arrow slider-arrow--right" onClick={next} aria-label="Next slide">
+          <ChevronRight size={24} />
+        </button>
+
+        {/* Dots */}
+        <div className="slider-dots">
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              className={`slider-dot ${i === current ? 'slider-dot--active' : ''}`}
+              onClick={() => goTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div className="slider-progress">
+          <div key={current} className="slider-progress-bar" />
         </div>
       </section>
 
@@ -84,7 +181,7 @@ export const Home = () => {
                 <Calendar size={28} color="#10b981" />
               </div>
               <h3>Table Reservations</h3>
-              <p>Book tables at your favorite restaurants instantly. No waiting, no hassle.</p>
+              <p>Book tables at your favourite restaurants instantly. No waiting, no hassle.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon" style={{ background: '#eff6ff' }}>
@@ -98,7 +195,7 @@ export const Home = () => {
                 <Shield size={28} color="#ec4899" />
               </div>
               <h3>Secure Payments</h3>
-              <p>Stripe-powered checkout with full encryption and buyer protection.</p>
+              <p>Razorpay / COD checkout with full encryption and buyer protection.</p>
             </div>
           </div>
         </div>
@@ -108,6 +205,7 @@ export const Home = () => {
       <section className="how-it-works">
         <div className="container">
           <h2 className="section-title">How It Works</h2>
+          <p className="section-subtitle">Four simple steps to your perfect meal</p>
           <div className="steps">
             <div className="step">
               <div className="step-number">1</div>
@@ -118,13 +216,13 @@ export const Home = () => {
             <div className="step">
               <div className="step-number">2</div>
               <h3>Order</h3>
-              <p>Add items to your cart and checkout securely with Razorpay/ COD.</p>
+              <p>Add items to your cart and checkout securely with Razorpay / COD.</p>
             </div>
             <div className="step-connector" />
             <div className="step">
               <div className="step-number">3</div>
               <h3>Track</h3>
-              <p>Get your order in real-time with our advanced tracking system.</p>
+              <p>Follow your order in real-time with our advanced tracking system.</p>
             </div>
             <div className="step-connector" />
             <div className="step">
@@ -140,7 +238,7 @@ export const Home = () => {
       <section className="cta">
         <div className="container cta-content">
           <h2>Ready to Get Started?</h2>
-          <p>Join thousands of food lovers and discover your next favorite meal.</p>
+          <p>Join thousands of food lovers and discover your next favourite meal.</p>
           <Link to="/register" className="btn btn-primary btn-lg">
             <Utensils size={20} />
             Create Free Account

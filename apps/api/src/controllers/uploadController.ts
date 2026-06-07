@@ -125,3 +125,50 @@ export const serveImage = async (
     next(error);
   }
 };
+
+/* ─── Upload restaurant UPI QR image (merchant only) ─────────────── */
+export const uploadRestaurantUpiQr = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ success: false, error: 'No image file provided' });
+      return;
+    }
+
+    const restaurant = await Restaurant.findOne({
+      _id: req.params.restaurantId,
+      ownerId: req.user!._id,
+    });
+    if (!restaurant) {
+      res.status(404).json({ success: false, error: 'Restaurant not found or unauthorized' });
+      return;
+    }
+
+    // Delete old QR image if one already exists
+    if (restaurant.upiQrUrl) {
+      const oldId = restaurant.upiQrUrl.split('/').pop();
+      if (oldId) await Image.findByIdAndDelete(oldId).catch(() => {});
+    }
+
+    // Save new QR image to Atlas
+    const imgDoc = await Image.create({
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
+      uploadedBy: req.user!._id,
+      relatedId: restaurant._id,
+      relatedType: 'restaurant',
+    });
+
+    const imageUrl = `${getBaseUrl(req)}/api/v1/images/${imgDoc._id}`;
+
+    restaurant.upiQrUrl = imageUrl;
+    await restaurant.save();
+
+    res.status(201).json({ success: true, data: { imageUrl, imageId: imgDoc._id } });
+  } catch (error) {
+    next(error);
+  }
+};

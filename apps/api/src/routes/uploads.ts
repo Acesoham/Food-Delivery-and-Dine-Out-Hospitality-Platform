@@ -39,4 +39,13 @@ router.post(
   ctrl.uploadMenuItemImage
 );
 
+// ─── Merchant: upload UPI QR code image ───
+router.post(
+  '/uploads/restaurant/:restaurantId/upi-qr',
+  authenticate,
+  requireRole('merchant', 'admin'),
+  upload.single('image'),
+  ctrl.uploadRestaurantUpiQr
+);
+
 export default router;

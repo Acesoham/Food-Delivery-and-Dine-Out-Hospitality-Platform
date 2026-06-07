@@ -9,6 +9,8 @@ interface UpiPaymentModalProps {
   amount: number;            // in ₹
   orderId: string;           // DB order/booking ID (refId)
   type: 'order' | 'event' | 'reservation';
+  restaurantUpiId?: string;  // merchant's real UPI VPA
+  restaurantQrUrl?: string;  // merchant's uploaded QR image URL
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -47,15 +49,19 @@ const UPI_APPS = [
   },
 ];
 
-export const UpiPaymentModal = ({ amount, orderId, type, onSuccess, onCancel }: UpiPaymentModalProps) => {
+export const UpiPaymentModal = ({ amount, orderId, type, restaurantUpiId, restaurantQrUrl, onSuccess, onCancel }: UpiPaymentModalProps) => {
   const [step, setStep] = useState<'scan' | 'confirm' | 'processing' | 'success'>('scan');
   const [copied, setCopied] = useState(false);
 
+  // Use the restaurant's own UPI ID when available; fall back to Razorpay test ID
+  const effectiveUpiId = (restaurantUpiId && restaurantUpiId.trim()) ? restaurantUpiId.trim() : TEST_UPI_ID;
+  const merchantName = (restaurantUpiId && restaurantUpiId.trim()) ? 'Restaurant' : MERCHANT_NAME;
+
   // UPI payment string for QR code
-  const upiString = `upi://pay?pa=${TEST_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(type === 'order' ? 'FoodHub Food Order' : type === 'event' ? 'FoodHub Event Booking' : 'FoodHub Table Reservation')}`;
+  const upiString = `upi://pay?pa=${effectiveUpiId}&pn=${encodeURIComponent(merchantName)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(type === 'order' ? 'Food Order Payment' : type === 'event' ? 'Event Booking Payment' : 'Table Reservation Payment')}`;
 
   const handleCopyUpiId = () => {
-    navigator.clipboard.writeText(TEST_UPI_ID).then(() => {
+    navigator.clipboard.writeText(effectiveUpiId).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -63,7 +69,7 @@ export const UpiPaymentModal = ({ amount, orderId, type, onSuccess, onCancel }: 
 
   const handleAppClick = (app: typeof UPI_APPS[0]) => {
     // Attempt to open the UPI app (works on mobile)
-    const upiLink = `${app.scheme}?pa=${TEST_UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount.toFixed(2)}&cu=INR`;
+    const upiLink = `${app.scheme}?pa=${effectiveUpiId}&pn=${encodeURIComponent(merchantName)}&am=${amount.toFixed(2)}&cu=INR`;
     window.location.href = upiLink;
     // After attempting to open app, show confirm step
     setTimeout(() => setStep('confirm'), 1500);
@@ -109,14 +115,24 @@ export const UpiPaymentModal = ({ amount, orderId, type, onSuccess, onCancel }: 
             {/* QR Code */}
             <div className="upi-qr-section">
               <div className="upi-qr-wrapper">
-                <QRCodeCanvas
-                  value={upiString}
-                  size={180}
-                  bgColor="#ffffff"
-                  fgColor="#1a1a2e"
-                  level="H"
-                  includeMargin
-                />
+                {restaurantQrUrl ? (
+                  /* Show the merchant's own uploaded QR image */
+                  <img
+                    src={restaurantQrUrl}
+                    alt="Restaurant UPI QR Code"
+                    style={{ width: '100%', maxWidth: 260, height: 'auto', maxHeight: 320, objectFit: 'contain', borderRadius: 8 }}
+                  />
+                ) : (
+                  /* Auto-generate QR from UPI string */
+                  <QRCodeCanvas
+                    value={upiString}
+                    size={180}
+                    bgColor="#ffffff"
+                    fgColor="#1a1a2e"
+                    level="H"
+                    includeMargin
+                  />
+                )}
                 <div className="upi-qr-label">Scan with any UPI app</div>
               </div>
             </div>
@@ -143,7 +159,7 @@ export const UpiPaymentModal = ({ amount, orderId, type, onSuccess, onCancel }: 
             <div className="upi-id-section">
               <span className="upi-id-label">UPI ID</span>
               <div className="upi-id-row">
-                <span className="upi-id-value">{TEST_UPI_ID}</span>
+                <span className="upi-id-value">{effectiveUpiId}</span>
                 <button className="upi-copy-btn" onClick={handleCopyUpiId}>
                   {copied ? <Check size={14} /> : <Copy size={14} />}
                   {copied ? 'Copied!' : 'Copy'}
@@ -151,10 +167,12 @@ export const UpiPaymentModal = ({ amount, orderId, type, onSuccess, onCancel }: 
               </div>
             </div>
 
-            {/* Test mode confirm */}
-            <div className="upi-test-notice">
-              🧪 <strong>Test Mode</strong> — Use UPI ID <code>success@razorpay</code> in your app
-            </div>
+            {/* Show test-mode notice only when falling back to test UPI */}
+            {effectiveUpiId === TEST_UPI_ID && (
+              <div className="upi-test-notice">
+                🧪 <strong>Test Mode</strong> — Use UPI ID <code>success@razorpay</code> in your app
+              </div>
+            )}
 
             <button className="upi-paid-btn" onClick={() => setStep('confirm')}>
               ✅ I've completed the payment

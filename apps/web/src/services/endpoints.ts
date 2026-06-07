@@ -215,5 +215,16 @@ export const uploadApi = {
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
   },
+
+  /** Upload the restaurant's UPI QR code image (multipart/form-data) */
+  uploadRestaurantUpiQr: (restaurantId: string, file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api.post<{ success: boolean; data: { imageUrl: string; imageId: string } }>(
+      `/uploads/restaurant/${restaurantId}/upi-qr`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
 };
 

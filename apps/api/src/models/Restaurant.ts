@@ -46,6 +46,8 @@ const restaurantSchema = new Schema<RestaurantDocument>(
     ],
     deliveryRadius: { type: Number, default: 5000 }, // meters
     isActive: { type: Boolean, default: true },
+    upiId: { type: String, default: '' },     // merchant UPI VPA e.g. "shop@upi"
+    upiQrUrl: { type: String, default: '' },  // URL of uploaded QR image
   } as any, {
     timestamps: true,
     toJSON: { virtuals: true, versionKey: false },

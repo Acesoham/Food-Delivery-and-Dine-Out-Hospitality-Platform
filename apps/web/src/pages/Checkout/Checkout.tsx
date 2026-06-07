@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
-import { orderApi, paymentApi } from '../../services/endpoints';
+import { orderApi, paymentApi, restaurantApi } from '../../services/endpoints';
 import toast from 'react-hot-toast';
 import { Loader2, ArrowLeft, CreditCard, Banknote, CheckCircle2, Smartphone, Star } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -21,6 +21,24 @@ export const Checkout = () => {
   const [upiModalOpen, setUpiModalOpen] = useState(false);
   const [upiOrderId, setUpiOrderId] = useState<string | null>(null);
 
+  // Restaurant UPI payment info (fetched from backend)
+  const [restaurantUpiInfo, setRestaurantUpiInfo] = useState<{
+    upiId: string;
+    upiQrUrl: string;
+  } | null>(null);
+
+  // Fetch restaurant UPI details when we know the restaurantId
+  useEffect(() => {
+    if (!restaurantId) return;
+    restaurantApi.getById(restaurantId).then(res => {
+      const rest = res.data.data.restaurant as any;
+      setRestaurantUpiInfo({
+        upiId: rest.upiId || '',
+        upiQrUrl: rest.upiQrUrl || '',
+      });
+    }).catch(() => {}); // silently — fallback to test UPI QR
+  }, [restaurantId]);
+
   // Points redemption
   const availablePoints = user?.loyaltyPoints ?? 0;
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
@@ -30,6 +48,13 @@ export const Checkout = () => {
     city: '',
     state: '',
     zipCode: '',
+  });
+
+  const [cardDetails, setCardDetails] = useState({
+    number: '',
+    expiry: '',
+    cvv: '',
+    name: '',
   });
 
   const subtotal = getSubtotal();
@@ -277,7 +302,7 @@ export const Checkout = () => {
                       <span className="payment-icon payment-icon-card"><CreditCard size={22} /></span>
                       <div>
                         <span className="payment-label">Credit / Debit Card</span>
-                        <span className="payment-sub">Secure online payment (demo)</span>
+                        <span className="payment-sub">Secure online payment</span>
                       </div>
                     </div>
                     {paymentMethod === 'card' && <CheckCircle2 size={20} className="payment-check" />}
@@ -302,7 +327,32 @@ export const Checkout = () => {
                   <div className="cod-info">💵 Keep ₹{total.toFixed(2)} ready to pay to the delivery partner.</div>
                 )}
                 {paymentMethod === 'card' && (
-                  <div className="card-info">🔒 This will place a test order (demo mode).</div>
+                  <div className="card-info" style={{ display: 'block', padding: '1.25rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '12px', marginTop: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '1rem', color: '#16a34a', fontSize: '0.85rem', fontWeight: 600 }}>
+                      🔒 Fast & secure online checkout.
+                    </div>
+                    
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Card Number</label>
+                      <input type="text" maxLength={19} placeholder="0000 0000 0000 0000" className="input" required={paymentMethod === 'card'} value={cardDetails.number} onChange={e => setCardDetails({...cardDetails, number: e.target.value})} />
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Expiry (MM/YY)</label>
+                        <input type="text" maxLength={5} placeholder="MM/YY" className="input" required={paymentMethod === 'card'} value={cardDetails.expiry} onChange={e => setCardDetails({...cardDetails, expiry: e.target.value})} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--text-secondary)' }}>CVV</label>
+                        <input type="password" maxLength={3} placeholder="123" className="input" required={paymentMethod === 'card'} value={cardDetails.cvv} onChange={e => setCardDetails({...cardDetails, cvv: e.target.value})} />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Name on Card</label>
+                      <input type="text" placeholder="John Doe" className="input" required={paymentMethod === 'card'} value={cardDetails.name} onChange={e => setCardDetails({...cardDetails, name: e.target.value})} />
+                    </div>
+                  </div>
                 )}
                 {paymentMethod === 'upi' && (
                   <div className="upi-info">📱 Scan QR or pay via GPay, PhonePe, Paytm & BHIM.</div>
@@ -368,6 +418,8 @@ export const Checkout = () => {
           amount={total}
           orderId={upiOrderId}
           type="order"
+          restaurantUpiId={restaurantUpiInfo?.upiId}
+          restaurantQrUrl={restaurantUpiInfo?.upiQrUrl}
           onSuccess={handleUpiSuccess}
           onCancel={handleUpiCancel}
         />
