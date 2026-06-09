@@ -3,8 +3,8 @@ import { Image } from '../models/Image';
 import { Restaurant } from '../models/Restaurant';
 import { MenuItem } from '../models/MenuItem';
 
-const getBaseUrl = (req: Request) =>
-  `${req.protocol}://${req.get('host')}`;
+const getBaseUrl = () =>
+  process.env.BASE_URL || 'http://52.66.123.200';
 
 /* ─── Upload restaurant image ─────────────────────────────────────── */
 export const uploadRestaurantImage = async (
@@ -36,7 +36,7 @@ export const uploadRestaurantImage = async (
       relatedType: 'restaurant',
     });
 
-    const imageUrl = `${getBaseUrl(req)}/api/v1/images/${imgDoc._id}`;
+    const imageUrl = `${getBaseUrl()}/api/v1/images/${imgDoc._id}`;
 
     // Push URL into restaurant.images[]
     restaurant.images.push(imageUrl);
@@ -93,7 +93,7 @@ export const uploadMenuItemImage = async (
       relatedType: 'menuItem',
     });
 
-    const imageUrl = `${getBaseUrl(req)}/api/v1/images/${imgDoc._id}`;
+    const imageUrl = `${getBaseUrl()}/api/v1/images/${imgDoc._id}`;
 
     menuItem.image = imageUrl;
     await menuItem.save();
@@ -162,7 +162,7 @@ export const uploadRestaurantUpiQr = async (
       relatedType: 'restaurant',
     });
 
-    const imageUrl = `${getBaseUrl(req)}/api/v1/images/${imgDoc._id}`;
+    const imageUrl = `${getBaseUrl()}/api/v1/images/${imgDoc._id}`;
 
     restaurant.upiQrUrl = imageUrl;
     await restaurant.save();

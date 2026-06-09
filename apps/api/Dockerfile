@@ -4,11 +4,18 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
-COPY . .
+COPY package.json .
+COPY pnpm-lock.yaml .
+COPY pnpm-workspace.yaml .
+
+COPY apps ./apps
+COPY packages ./packages
 
 RUN pnpm install
-RUN pnpm build
+
+RUN pnpm --filter shared-types build
+RUN pnpm --filter api build
 
 EXPOSE 5000
 
-CMD ["node", "dist/server.js"]
+CMD ["node","apps/api/dist/server.js"]

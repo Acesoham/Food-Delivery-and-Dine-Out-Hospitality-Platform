@@ -4,14 +4,23 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
-COPY . .
+COPY package.json .
+COPY pnpm-lock.yaml .
+COPY pnpm-workspace.yaml .
+
+COPY apps ./apps
+COPY packages ./packages
 
 RUN pnpm install
-RUN pnpm build
+
+RUN pnpm --filter shared-types build
+RUN pnpm --filter web build
 
 FROM nginx:alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 

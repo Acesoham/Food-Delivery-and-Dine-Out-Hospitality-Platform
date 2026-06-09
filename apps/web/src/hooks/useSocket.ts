@@ -2,7 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from 'shared-types';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

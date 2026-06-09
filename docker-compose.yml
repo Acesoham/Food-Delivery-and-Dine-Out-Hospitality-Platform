@@ -3,17 +3,19 @@ version: "3.9"
 services:
   api:
     build:
-      context: ./apps/api
+      context: .
+      dockerfile: apps/api/Dockerfile
     container_name: foodhub-api
     ports:
-      - "5000:5000"
+      - "5000"
     env_file:
       - ./apps/api/.env
     restart: unless-stopped
 
   web:
     build:
-      context: ./apps/web
+      context: .
+      dockerfile: apps/web/Dockerfile
     container_name: foodhub-web
     ports:
       - "80:80"
