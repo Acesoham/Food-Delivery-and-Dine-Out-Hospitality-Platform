@@ -7,7 +7,6 @@ import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModa
 import type { IRestaurant } from 'shared-types';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRestaurantImage } from '../../utils/imageUtils';
 import './DineOut.css';
 
 const CUISINE_FILTERS = [
@@ -315,7 +314,7 @@ export const DineOut = () => {
                 <div key={(r as any)._id} className="dineout-card card">
                   <div className="dineout-card-img">
                     <img
-                      src={r.images?.[0] || getRestaurantImage((r as any)._id, 600, 350)}
+                      src={r.images?.[0] || ["/hero_slide_1.png", "/hero_slide_2.png", "/hero_slide_3.png"][(r as any)._id.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 3]}
                       alt={r.name}
                       loading="lazy"
                     />
@@ -389,7 +388,7 @@ export const DineOut = () => {
               <>
                 <div className="reservation-modal-header">
                   <img
-                    src={selectedRestaurant.images?.[0] || getRestaurantImage((selectedRestaurant as any)._id, 600, 200)}
+                    src={selectedRestaurant.images?.[0] || ["/hero_slide_1.png", "/hero_slide_2.png", "/hero_slide_3.png"][(selectedRestaurant as any)._id.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 3]}
                     alt={selectedRestaurant.name}
                     className="reservation-restaurant-img"
                   />

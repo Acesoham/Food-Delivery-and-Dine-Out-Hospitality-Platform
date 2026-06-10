@@ -6,8 +6,6 @@ import { useCartStore } from '../../store/cartStore';
 import type { IRestaurant, IMenuItem, IReview } from 'shared-types';
 import toast from 'react-hot-toast';
 
-import { getRestaurantImage } from '../../utils/imageUtils';
-
 import './RestaurantDetail.css';
 
 interface PopulatedReview extends Omit<IReview, 'consumerId'> {
@@ -142,7 +140,7 @@ export const RestaurantDetail = () => {
         <div className="detail-header">
           <div className="detail-hero-img">
             <img
-              src={restaurant.images?.[0] || getRestaurantImage(restaurant._id, 1200, 400)}
+              src={restaurant.images?.[0] || ["/hero_slide_1.png", "/hero_slide_2.png", "/hero_slide_3.png"][restaurant._id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 3]}
               alt={restaurant.name}
             />
             <div className="detail-hero-overlay" />
