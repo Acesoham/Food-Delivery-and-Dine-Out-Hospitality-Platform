@@ -9,41 +9,40 @@ import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
 import '../../pages/Dashboard/Dashboard.css';
-import { resolveImageUrl } from '../../utils/imageUtils';
 
 /* ── Hierarchical location data ── */
 const COUNTRIES = ['India'];
 const STATES: Record<string, string[]> = {
-  India: ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Jammu & Kashmir','Ladakh','Puducherry'],
+  India: ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Puducherry'],
 };
 const DISTRICTS: Record<string, string[]> = {
-  Maharashtra: ['Mumbai','Pune','Nashik','Nagpur','Aurangabad','Solapur','Kolhapur','Satara','Sangli','Thane'],
-  Karnataka: ['Bengaluru Urban','Mysuru','Mangaluru','Hubballi-Dharwad','Belagavi'],
-  'Tamil Nadu': ['Chennai','Coimbatore','Madurai','Tiruchirappalli','Salem'],
-  Delhi: ['Central Delhi','East Delhi','New Delhi','North Delhi','South Delhi','West Delhi'],
-  Gujarat: ['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar'],
-  'Uttar Pradesh': ['Lucknow','Kanpur','Agra','Varanasi','Prayagraj','Noida'],
-  Rajasthan: ['Jaipur','Jodhpur','Udaipur','Kota','Ajmer'],
-  'West Bengal': ['Kolkata','Howrah','North 24 Parganas','South 24 Parganas'],
-  Telangana: ['Hyderabad','Rangareddy','Medchal-Malkajgiri','Warangal'],
-  'Andhra Pradesh': ['Visakhapatnam','East Godavari','West Godavari','Krishna','Guntur'],
+  Maharashtra: ['Mumbai', 'Pune', 'Nashik', 'Nagpur', 'Aurangabad', 'Solapur', 'Kolhapur', 'Satara', 'Sangli', 'Thane'],
+  Karnataka: ['Bengaluru Urban', 'Mysuru', 'Mangaluru', 'Hubballi-Dharwad', 'Belagavi'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem'],
+  Delhi: ['Central Delhi', 'East Delhi', 'New Delhi', 'North Delhi', 'South Delhi', 'West Delhi'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'],
+  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Agra', 'Varanasi', 'Prayagraj', 'Noida'],
+  Rajasthan: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer'],
+  'West Bengal': ['Kolkata', 'Howrah', 'North 24 Parganas', 'South 24 Parganas'],
+  Telangana: ['Hyderabad', 'Rangareddy', 'Medchal-Malkajgiri', 'Warangal'],
+  'Andhra Pradesh': ['Visakhapatnam', 'East Godavari', 'West Godavari', 'Krishna', 'Guntur'],
 };
 const CITIES: Record<string, string[]> = {
-  Mumbai: ['Andheri','Bandra','Borivali','Dadar','Kurla','Powai','Thane','Vashi'],
-  Pune: ['Shivajinagar','Kothrud','Hadapsar','Wakad','Hinjawadi','Viman Nagar'],
-  Nashik: ['Nashik Road','Panchvati','Satpur','Deolali','Sinnar'],
-  'Bengaluru Urban': ['Koramangala','Indiranagar','Whitefield','HSR Layout','Jayanagar'],
-  Chennai: ['T Nagar','Adyar','Anna Nagar','Velachery','Porur'],
-  Hyderabad: ['Banjara Hills','Jubilee Hills','Hitech City','Madhapur','Gachibowli'],
-  Jaipur: ['Malviya Nagar','Vaishali Nagar','Mansarovar','C-Scheme','Ajmer Road'],
-  'Central Delhi': ['Connaught Place','Karol Bagh','Paharganj'],
-  'New Delhi': ['Saket','Vasant Kunj','Dwarka','Janakpuri'],
-  'South Delhi': ['Hauz Khas','Lajpat Nagar','Green Park','Defence Colony'],
-  Kolkata: ['Park Street','Salt Lake','New Town','Howrah'],
-  Ahmedabad: ['Navrangpura','Vastrapur','Satellite','Bopal'],
+  Mumbai: ['Andheri', 'Bandra', 'Borivali', 'Dadar', 'Kurla', 'Powai', 'Thane', 'Vashi'],
+  Pune: ['Shivajinagar', 'Kothrud', 'Hadapsar', 'Wakad', 'Hinjawadi', 'Viman Nagar'],
+  Nashik: ['Nashik Road', 'Panchvati', 'Satpur', 'Deolali', 'Sinnar'],
+  'Bengaluru Urban': ['Koramangala', 'Indiranagar', 'Whitefield', 'HSR Layout', 'Jayanagar'],
+  Chennai: ['T Nagar', 'Adyar', 'Anna Nagar', 'Velachery', 'Porur'],
+  Hyderabad: ['Banjara Hills', 'Jubilee Hills', 'Hitech City', 'Madhapur', 'Gachibowli'],
+  Jaipur: ['Malviya Nagar', 'Vaishali Nagar', 'Mansarovar', 'C-Scheme', 'Ajmer Road'],
+  'Central Delhi': ['Connaught Place', 'Karol Bagh', 'Paharganj'],
+  'New Delhi': ['Saket', 'Vasant Kunj', 'Dwarka', 'Janakpuri'],
+  'South Delhi': ['Hauz Khas', 'Lajpat Nagar', 'Green Park', 'Defence Colony'],
+  Kolkata: ['Park Street', 'Salt Lake', 'New Town', 'Howrah'],
+  Ahmedabad: ['Navrangpura', 'Vastrapur', 'Satellite', 'Bopal'],
 };
 
-const CATEGORIES = ['Music','Food','Sports','Tech','Art','Comedy','Cultural','Education','Other'];
+const CATEGORIES = ['Music', 'Food', 'Sports', 'Tech', 'Art', 'Comedy', 'Cultural', 'Education', 'Other'];
 
 type EventForm = {
   title: string; description: string; category: string; imageUrl: string;
@@ -54,11 +53,11 @@ type EventForm = {
 };
 
 const EMPTY_FORM: EventForm = {
-  title:'', description:'', category:'Music', imageUrl:'',
-  date:'', endDate:'',
-  venueName:'', venueAddress:'',
-  country:'India', state:'', district:'', city:'', pincode:'',
-  ticketPrice:'0', totalSeats:'100', tags:'',
+  title: '', description: '', category: 'Music', imageUrl: '',
+  date: '', endDate: '',
+  venueName: '', venueAddress: '',
+  country: 'India', state: '', district: '', city: '', pincode: '',
+  ticketPrice: '0', totalSeats: '100', tags: '',
 };
 
 export const EventOrganizerDashboard = () => {
@@ -69,7 +68,7 @@ export const EventOrganizerDashboard = () => {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [form, setForm] = useState<EventForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'events'|'bookings'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'bookings'>('events');
   const [selectedEventBookings, setSelectedEventBookings] = useState<any[]>([]);
   const [bookingsEvent, setBookingsEvent] = useState<any>(null);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -92,8 +91,8 @@ export const EventOrganizerDashboard = () => {
     setEditingEvent(ev);
     setForm({
       title: ev.title, description: ev.description, category: ev.category,
-      imageUrl: ev.imageUrl || '', date: ev.date?.slice(0,16) || '',
-      endDate: ev.endDate?.slice(0,16) || '',
+      imageUrl: ev.imageUrl || '', date: ev.date?.slice(0, 16) || '',
+      endDate: ev.endDate?.slice(0, 16) || '',
       venueName: ev.venue.name, venueAddress: ev.venue.address,
       country: ev.venue.country, state: ev.venue.state,
       district: ev.venue.district, city: ev.venue.city, pincode: ev.venue.pincode || '',
@@ -151,7 +150,7 @@ export const EventOrganizerDashboard = () => {
     finally { setBookingsLoading(false); }
   };
 
-  const setF = (k: keyof EventForm) => (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) =>
+  const setF = (k: keyof EventForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
   const stateList = STATES[form.country] || [];
@@ -214,14 +213,14 @@ export const EventOrganizerDashboard = () => {
               {events.map(ev => (
                 <div key={ev._id} className={`organizer-event-card card ${!ev.isActive ? 'event-inactive' : ''}`}>
                   <div className="organizer-event-img">
-                    <img src={resolveImageUrl(ev.imageUrl) || `https://picsum.photos/seed/${ev._id}/500/220`} alt={ev.title} />
+                    <img src={ev.imageUrl || `https://picsum.photos/seed/${ev._id}/500/220`} alt={ev.title} />
                     <span className="event-category-badge">{ev.category}</span>
                     {!ev.isActive && <div className="event-inactive-overlay">Deactivated</div>}
                   </div>
                   <div className="organizer-event-body">
                     <h3>{ev.title}</h3>
                     <div className="organizer-event-meta">
-                      <span><Calendar size={12} /> {new Date(ev.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span>
+                      <span><Calendar size={12} /> {new Date(ev.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       <span>📍 {ev.venue.city}, {ev.venue.state}</span>
                       <span><Ticket size={12} /> {ev.availableSeats}/{ev.totalSeats} seats</span>
                       <span>₹{ev.ticketPrice}</span>
@@ -335,7 +334,7 @@ export const EventOrganizerDashboard = () => {
               <div className="location-cascade">
                 <div className="input-group">
                   <label>Country *</label>
-                  <select className="input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state:'', district:'', city:'' }))}>
+                  <select className="input" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: '', district: '', city: '' }))}>
                     <option value="">Select Country</option>
                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -343,7 +342,7 @@ export const EventOrganizerDashboard = () => {
                 <ChevronDown size={16} className="cascade-arrow" />
                 <div className="input-group">
                   <label>State *</label>
-                  <select className="input" required value={form.state} disabled={!form.country} onChange={e => setForm(f => ({ ...f, state: e.target.value, district:'', city:'' }))}>
+                  <select className="input" required value={form.state} disabled={!form.country} onChange={e => setForm(f => ({ ...f, state: e.target.value, district: '', city: '' }))}>
                     <option value="">Select State</option>
                     {stateList.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -351,7 +350,7 @@ export const EventOrganizerDashboard = () => {
                 <ChevronDown size={16} className="cascade-arrow" />
                 <div className="input-group">
                   <label>District *</label>
-                  <select className="input" required value={form.district} disabled={!form.state} onChange={e => setForm(f => ({ ...f, district: e.target.value, city:'' }))}>
+                  <select className="input" required value={form.district} disabled={!form.state} onChange={e => setForm(f => ({ ...f, district: e.target.value, city: '' }))}>
                     <option value="">Select District</option>
                     {districtList.length > 0 ? districtList.map(d => <option key={d} value={d}>{d}</option>) : null}
                     <option value="Other">Other</option>

@@ -7,7 +7,7 @@ import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModa
 import type { IRestaurant } from 'shared-types';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRestaurantImage, resolveImageUrl } from '../../utils/imageUtils';
+import { getRestaurantImage } from '../../utils/imageUtils';
 import './DineOut.css';
 
 const CUISINE_FILTERS = [
@@ -66,7 +66,7 @@ export const DineOut = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {}
+        () => { }
       );
     }
   }, []);
@@ -315,7 +315,7 @@ export const DineOut = () => {
                 <div key={(r as any)._id} className="dineout-card card">
                   <div className="dineout-card-img">
                     <img
-                      src={resolveImageUrl(r.images?.[0]) || getRestaurantImage((r as any)._id, 600, 350)}
+                      src={r.images?.[0] || getRestaurantImage((r as any)._id, 600, 350)}
                       alt={r.name}
                       loading="lazy"
                     />
@@ -389,7 +389,7 @@ export const DineOut = () => {
               <>
                 <div className="reservation-modal-header">
                   <img
-                    src={resolveImageUrl(selectedRestaurant.images?.[0]) || getRestaurantImage((selectedRestaurant as any)._id, 600, 200)}
+                    src={selectedRestaurant.images?.[0] || getRestaurantImage((selectedRestaurant as any)._id, 600, 200)}
                     alt={selectedRestaurant.name}
                     className="reservation-restaurant-img"
                   />
@@ -442,7 +442,7 @@ export const DineOut = () => {
                         onChange={(e) => setBooking({ ...booking, partySize: Number(e.target.value), tableId: '' })}
                         className="form-input"
                       >
-                        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                           <option key={n} value={n}>{n} {n === 1 ? 'Guest' : 'Guests'}</option>
                         ))}
                       </select>

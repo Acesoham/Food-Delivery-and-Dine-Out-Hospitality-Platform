@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Star, Clock, Filter, Loader2 } from 'lucide-react';
 import { restaurantApi } from '../../services/endpoints';
 import type { IRestaurant } from 'shared-types';
-import { getRestaurantImage, resolveImageUrl } from '../../utils/imageUtils';
+import { getRestaurantImage } from '../../utils/imageUtils';
 import './Discover.css';
 
 const CUISINE_FILTERS = [
@@ -108,7 +108,7 @@ export const Discover = () => {
               >
                 <div className="restaurant-img">
                   <img
-                    src={resolveImageUrl(r.images?.[0]) || getRestaurantImage(r._id, 400, 250)}
+                    src={r.images?.[0] || getRestaurantImage(r._id, 400, 250)}
                     alt={r.name}
                     loading="lazy"
                   />

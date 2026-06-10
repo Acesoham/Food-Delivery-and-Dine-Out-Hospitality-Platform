@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { restaurantApi, orderApi, uploadApi } from '../../services/endpoints';
-import { resolveImageUrl } from '../../utils/imageUtils';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../hooks/useSocket';
 import { LoyaltyWidget } from '../../components/LoyaltyWidget/LoyaltyWidget';
@@ -162,7 +161,7 @@ export const Dashboard = () => {
           zipCode: restForm.zipCode,
         },
         contact: { phone: restForm.phone, email: restForm.email },
-        operatingHours: [0,1,2,3,4,5,6].map(day => ({
+        operatingHours: [0, 1, 2, 3, 4, 5, 6].map(day => ({
           day, open: '10:00', close: '22:00',
         })),
         tables: [
@@ -236,7 +235,7 @@ export const Dashboard = () => {
       } else {
         setRestaurant(data.data);
       }
-      
+
       toast.success('Settings saved!');
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to update settings');
@@ -869,7 +868,7 @@ export const Dashboard = () => {
                     <div key={item._id} className={`menu-admin-card card ${!item.isAvailable ? 'unavailable' : ''}`}>
                       {item.image && (
                         <div style={{ height: 110, overflow: 'hidden', borderRadius: 'var(--radius) var(--radius) 0 0', flexShrink: 0 }}>
-                          <img src={resolveImageUrl(item.image)} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                       )}
                       <div className="menu-admin-info">
@@ -975,7 +974,7 @@ export const Dashboard = () => {
                     />
                     {restImagePreview || restaurant?.images?.[0] ? (
                       <div style={{ position: 'relative', borderRadius: 'var(--radius)', overflow: 'hidden', height: 160 }}>
-                        <img src={restImagePreview || resolveImageUrl(restaurant?.images?.[0])} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={restImagePreview || restaurant?.images?.[0]} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <button
                           type="button"
                           onClick={() => { setRestImageFile(null); setRestImagePreview(''); if (restImageRef.current) restImageRef.current.value = ''; }}
@@ -1058,7 +1057,7 @@ export const Dashboard = () => {
                     {upiQrPreview ? (
                       <div style={{ position: 'relative', display: 'inline-block' }}>
                         <img
-                          src={resolveImageUrl(upiQrPreview)}
+                          src={upiQrPreview}
                           alt="UPI QR"
                           style={{
                             width: 160, height: 160, objectFit: 'cover',
