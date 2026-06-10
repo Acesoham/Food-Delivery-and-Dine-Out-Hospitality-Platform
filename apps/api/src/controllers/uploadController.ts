@@ -3,8 +3,16 @@ import { Image } from '../models/Image';
 import { Restaurant } from '../models/Restaurant';
 import { MenuItem } from '../models/MenuItem';
 
+/**
+ * Returns the URL prefix for image paths.
+ * - If BASE_URL is explicitly set (e.g. https://foodhub.dedyn.io), use it
+ *   so the stored URL is absolute and correct.
+ * - Otherwise store a root-relative path (/api/v1/images/...) which works
+ *   when the API is behind an nginx reverse proxy on the same domain.
+ *   This avoids the old hardcoded IP breaking images after re-deployment.
+ */
 const getBaseUrl = () =>
-  process.env.BASE_URL || 'http://52.66.123.200';
+  process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '';
 
 /* ─── Upload restaurant image ─────────────────────────────────────── */
 export const uploadRestaurantImage = async (

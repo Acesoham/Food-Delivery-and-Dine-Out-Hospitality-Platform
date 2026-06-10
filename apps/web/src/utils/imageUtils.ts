@@ -24,3 +24,34 @@ export const getRestaurantImage = (id: string, width: number, height: number) =>
   
   return `https://images.unsplash.com/${imageId}?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
 };
+
+/**
+ * Resolves an image URL to one that works in the current environment.
+ *
+ * Problem: Images were previously stored in MongoDB with a hardcoded absolute
+ * URL (e.g. http://52.66.123.200/api/v1/images/<id>).  When the app is served
+ * over HTTPS on a different domain the browser blocks these as mixed-content.
+ *
+ * Solution: Extract just the image <id> from any stored URL and rebuild the
+ * path using the VITE_API_URL env var (or the default relative /api/v1 path
+ * which nginx proxies to the API container).  This works whether the stored
+ * URL is:
+ *   • http://52.66.123.200/api/v1/images/<id>   (old hardcoded IP)
+ *   • http://localhost:5000/api/v1/images/<id>   (local dev)
+ *   • /api/v1/images/<id>                        (new relative path)
+ *   • https://foodhub.dedyn.io/api/v1/images/<id> (new absolute)
+ */
+export const resolveImageUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+
+  const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+
+  // Any URL that contains our image serve path — rewrite via current API_BASE
+  if (url.includes('/api/v1/images/')) {
+    const id = url.split('/api/v1/images/')[1];
+    return `${API_BASE}/images/${id}`;
+  }
+
+  // All other URLs (Unsplash, picsum, external CDN, etc.) — pass through as-is
+  return url;
+};

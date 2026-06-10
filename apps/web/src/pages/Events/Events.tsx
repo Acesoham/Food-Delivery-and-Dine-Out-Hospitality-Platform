@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModal';
 import toast from 'react-hot-toast';
+import { resolveImageUrl } from '../../utils/imageUtils';
 import './Events.css';
 
 interface IEvent {
@@ -389,7 +390,7 @@ export const Events = () => {
                   <div key={event._id} className="event-card card">
                     <div className="event-card-img">
                       <img
-                        src={event.imageUrl || `https://picsum.photos/seed/${event._id}/600/300`}
+                        src={resolveImageUrl(event.imageUrl) || `https://picsum.photos/seed/${event._id}/600/300`}
                         alt={event.title}
                       />
                       <span className="event-category-badge">{event.category}</span>
@@ -443,7 +444,7 @@ export const Events = () => {
             </div>
             <div className="modal-body">
               <div className="booking-event-preview">
-                <img src={bookingEvent.imageUrl || `https://picsum.photos/seed/${bookingEvent._id}/400/200`} alt={bookingEvent.title} />
+                <img src={resolveImageUrl(bookingEvent.imageUrl) || `https://picsum.photos/seed/${bookingEvent._id}/400/200`} alt={bookingEvent.title} />
                 <div>
                   <h3>{bookingEvent.title}</h3>
                   <p><Calendar size={13} /> {new Date(bookingEvent.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>

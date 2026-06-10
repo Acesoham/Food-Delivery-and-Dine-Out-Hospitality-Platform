@@ -6,7 +6,7 @@ import { useCartStore } from '../../store/cartStore';
 import type { IRestaurant, IMenuItem, IReview } from 'shared-types';
 import toast from 'react-hot-toast';
 
-import { getRestaurantImage } from '../../utils/imageUtils';
+import { getRestaurantImage, resolveImageUrl } from '../../utils/imageUtils';
 
 import './RestaurantDetail.css';
 
@@ -142,7 +142,7 @@ export const RestaurantDetail = () => {
         <div className="detail-header">
           <div className="detail-hero-img">
             <img
-              src={restaurant.images?.[0] || getRestaurantImage(restaurant._id, 1200, 400)}
+              src={resolveImageUrl(restaurant.images?.[0]) || getRestaurantImage(restaurant._id, 1200, 400)}
               alt={restaurant.name}
             />
             <div className="detail-hero-overlay" />
@@ -278,7 +278,7 @@ export const RestaurantDetail = () => {
                       <div className="pr-user-info">
                         <div className="pr-avatar">
                           {rev.consumerId?.profile?.avatar ? (
-                            <img src={rev.consumerId.profile.avatar} alt="avatar" />
+                            <img src={resolveImageUrl(rev.consumerId.profile.avatar)} alt="avatar" />
                           ) : (
                             <span>{(rev.consumerId?.profile?.firstName || 'U')[0].toUpperCase()}</span>
                           )}
@@ -346,7 +346,7 @@ export const RestaurantDetail = () => {
                       <div className="pr-media-grid">
                         {rev.media.map((url, i) => (
                           <div key={i} className="pr-media-thumb">
-                            <img src={url} alt={`Review photo ${i + 1}`} onClick={() => window.open(url, '_blank')} />
+                            <img src={resolveImageUrl(url)} alt={`Review photo ${i + 1}`} onClick={() => window.open(resolveImageUrl(url), '_blank')} />
                           </div>
                         ))}
                       </div>

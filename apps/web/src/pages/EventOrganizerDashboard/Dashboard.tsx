@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
 import '../../pages/Dashboard/Dashboard.css';
+import { resolveImageUrl } from '../../utils/imageUtils';
 
 /* ── Hierarchical location data ── */
 const COUNTRIES = ['India'];
@@ -213,7 +214,7 @@ export const EventOrganizerDashboard = () => {
               {events.map(ev => (
                 <div key={ev._id} className={`organizer-event-card card ${!ev.isActive ? 'event-inactive' : ''}`}>
                   <div className="organizer-event-img">
-                    <img src={ev.imageUrl || `https://picsum.photos/seed/${ev._id}/500/220`} alt={ev.title} />
+                    <img src={resolveImageUrl(ev.imageUrl) || `https://picsum.photos/seed/${ev._id}/500/220`} alt={ev.title} />
                     <span className="event-category-badge">{ev.category}</span>
                     {!ev.isActive && <div className="event-inactive-overlay">Deactivated</div>}
                   </div>

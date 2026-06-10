@@ -3,6 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { CheckCircle2, Loader2, X, Smartphone, Copy, Check } from 'lucide-react';
 import { paymentApi } from '../../services/endpoints';
 import toast from 'react-hot-toast';
+import { resolveImageUrl } from '../../utils/imageUtils';
 import './UpiPaymentModal.css';
 
 interface UpiPaymentModalProps {
@@ -118,7 +119,7 @@ export const UpiPaymentModal = ({ amount, orderId, type, restaurantUpiId, restau
                 {restaurantQrUrl ? (
                   /* Show the merchant's own uploaded QR image */
                   <img
-                    src={restaurantQrUrl}
+                    src={resolveImageUrl(restaurantQrUrl)}
                     alt="Restaurant UPI QR Code"
                     style={{ width: '100%', maxWidth: 260, height: 'auto', maxHeight: 320, objectFit: 'contain', borderRadius: 8 }}
                   />

@@ -7,7 +7,7 @@ import { UpiPaymentModal } from '../../components/UpiPaymentModal/UpiPaymentModa
 import type { IRestaurant } from 'shared-types';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRestaurantImage } from '../../utils/imageUtils';
+import { getRestaurantImage, resolveImageUrl } from '../../utils/imageUtils';
 import './DineOut.css';
 
 const CUISINE_FILTERS = [
@@ -315,7 +315,7 @@ export const DineOut = () => {
                 <div key={(r as any)._id} className="dineout-card card">
                   <div className="dineout-card-img">
                     <img
-                      src={r.images?.[0] || getRestaurantImage((r as any)._id, 600, 350)}
+                      src={resolveImageUrl(r.images?.[0]) || getRestaurantImage((r as any)._id, 600, 350)}
                       alt={r.name}
                       loading="lazy"
                     />
@@ -389,7 +389,7 @@ export const DineOut = () => {
               <>
                 <div className="reservation-modal-header">
                   <img
-                    src={selectedRestaurant.images?.[0] || getRestaurantImage((selectedRestaurant as any)._id, 600, 200)}
+                    src={resolveImageUrl(selectedRestaurant.images?.[0]) || getRestaurantImage((selectedRestaurant as any)._id, 600, 200)}
                     alt={selectedRestaurant.name}
                     className="reservation-restaurant-img"
                   />
