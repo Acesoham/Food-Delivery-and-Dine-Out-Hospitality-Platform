@@ -6,6 +6,8 @@ import { useCartStore } from '../../store/cartStore';
 import type { IRestaurant, IMenuItem, IReview } from 'shared-types';
 import toast from 'react-hot-toast';
 
+import { getRestaurantImage } from '../../utils/imageUtils';
+
 import './RestaurantDetail.css';
 
 interface PopulatedReview extends Omit<IReview, 'consumerId'> {
@@ -33,10 +35,6 @@ export const RestaurantDetail = () => {
   const [reviews, setReviews] = useState<PopulatedReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  useEffect(() => {
-    if (id) fetchRestaurant(id);
-  }, [id]);
-
   const fetchRestaurant = async (restaurantId: string) => {
     try {
       const { data } = await restaurantApi.getById(restaurantId);
@@ -62,6 +60,10 @@ export const RestaurantDetail = () => {
       setLoadingReviews(false);
     }
   };
+
+  useEffect(() => {
+    if (id) fetchRestaurant(id);
+  }, [id]);
 
   const categories = ['All', ...new Set(menuItems.map((i) => i.category))];
   // Show all items so customers can see which ones are out of stock
@@ -140,7 +142,7 @@ export const RestaurantDetail = () => {
         <div className="detail-header">
           <div className="detail-hero-img">
             <img
-              src={restaurant.images?.[0] || `https://picsum.photos/seed/${restaurant._id}/1200/400`}
+              src={restaurant.images?.[0] || getRestaurantImage(restaurant._id, 1200, 400)}
               alt={restaurant.name}
             />
             <div className="detail-hero-overlay" />
