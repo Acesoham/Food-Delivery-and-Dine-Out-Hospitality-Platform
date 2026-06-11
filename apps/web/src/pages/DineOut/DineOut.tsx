@@ -35,7 +35,8 @@ export const DineOut = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
-  const [userLocation, setUserLocation] = useState({ lat: 19.9975, lng: 73.7898 });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
 
   // Modal state
   const [selectedRestaurant, setSelectedRestaurant] = useState<IRestaurant | null>(null);
@@ -65,16 +66,19 @@ export const DineOut = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => { }
+        () => setLocationDenied(true)
       );
+    } else {
+      setLocationDenied(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchRestaurants();
+    if (userLocation) fetchRestaurants();
   }, [userLocation, selectedCuisine, search]);
 
   const fetchRestaurants = async () => {
+    if (!userLocation) return;
     setLoading(true);
     try {
       const params: any = {
@@ -300,6 +304,15 @@ export const DineOut = () => {
           <div className="results-loading">
             <Loader2 size={36} className="spin" />
             <p>Finding restaurants near you...</p>
+          </div>
+        ) : locationDenied ? (
+          <div className="no-results">
+            <p>📍 Location access denied. Please enable location in your browser settings to see restaurants near you.</p>
+          </div>
+        ) : !userLocation ? (
+          <div className="results-loading">
+            <Loader2 size={36} className="spin" />
+            <p>Detecting your location…</p>
           </div>
         ) : restaurants.length === 0 ? (
           <div className="no-results">

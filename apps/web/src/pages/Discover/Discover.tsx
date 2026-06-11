@@ -15,23 +15,26 @@ export const Discover = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
-  const [userLocation, setUserLocation] = useState({ lat: 19.9975, lng: 73.7898 }); // Default: Nashik
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
 
   useEffect(() => {
-    // Try getting user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => console.log('Using default location')
+        () => setLocationDenied(true)
       );
+    } else {
+      setLocationDenied(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchRestaurants();
+    if (userLocation) fetchRestaurants();
   }, [userLocation, selectedCuisine, search]);
 
   const fetchRestaurants = async () => {
+    if (!userLocation) return;
     setLoading(true);
     try {
       const params: any = {
@@ -92,6 +95,15 @@ export const Discover = () => {
           <div className="results-loading">
             <Loader2 size={32} className="spin" />
             <p>Finding restaurants near you...</p>
+          </div>
+        ) : locationDenied ? (
+          <div className="no-results">
+            <p>📍 Location access denied. Please enable location in your browser settings to discover nearby restaurants.</p>
+          </div>
+        ) : !userLocation ? (
+          <div className="results-loading">
+            <Loader2 size={32} className="spin" />
+            <p>Detecting your location…</p>
           </div>
         ) : restaurants.length === 0 ? (
           <div className="no-results">
